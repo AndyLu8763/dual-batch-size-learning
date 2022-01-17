@@ -37,7 +37,7 @@ Run `DBSL.py` by:
 python DBSL.py -a='$(serverIP)' -w=$(wordSize) -r=$(rank)
 ```
 - addres: Server IP
-- world: numbers of machines parameter server
+- world: numbers of machines on parameter server
 - rank: 1~(w-1) if worker, 0 if server
 - hyperparameters in code:
     - num_GPU, num_small
