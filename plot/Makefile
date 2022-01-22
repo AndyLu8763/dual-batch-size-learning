@@ -7,7 +7,7 @@ pyplot:
 	$(PYTHON) plot_pt_tf_train_time_compare.py
 	$(PYTHON) plot_extra_105.py
 	$(PYTHON) plot_extra_110.py
-	$(PYTHON) plot_with_without_weight.py
+	$(PYTHON) plot_with_without_factor.py
 	-mkdir $(PY_DIR)
 	mv *.png $(PY_DIR)
 gnuplot:
@@ -17,8 +17,8 @@ gnuplot:
 	$(GNU) acc_105.gp
 	$(GNU) loss_110.gp
 	$(GNU) acc_110.gp
-	$(GNU) loss_MUweight.gp
-	$(GNU) acc_MUweight.gp
+	$(GNU) loss_MUfactor.gp
+	$(GNU) acc_MUfactor.gp
 	-mkdir $(GNU_DIR)
 	mv *.png $(GNU_DIR)
 pngclean:

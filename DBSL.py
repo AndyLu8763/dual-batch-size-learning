@@ -1,4 +1,5 @@
 # clear; python DBSL.py -a='140.109.23.236' -w=5 -r= &
+# server at gpu08
 import argparse
 import os
 import threading
@@ -108,12 +109,12 @@ class ParameterServer(object):
         # average server and worker models' weights
         with self.model_lock:
             server_weights = self.model.get_weights()
-            update_weight = 1
+            update_factor = 1
             if worker_batch_size == small_BS:
-                update_weight = small_data / base_data
+                update_factor = small_data / base_data
             for i in range(len(server_weights)):
-                server_weights[i] = ((2 - update_weight) * server_weights[i]
-                                     + update_weight * worker_weights[i]
+                server_weights[i] = ((2 - update_factor) * server_weights[i]
+                                     + update_factor * worker_weights[i]
                                     ) / 2
             self.model.set_weights(server_weights)
             return self.model.get_weights()
@@ -133,13 +134,13 @@ class ParameterServer(object):
             'push_time': self.push_time_history,
             'train_loss': self.train_loss_history, 'train_acc': self.train_acc_history,
             'test_loss': self.test_loss_history, 'test_acc': self.test_acc_history}
-        filename = f'tf_extra{extra_time_ratio}_{num_small}s_{small_BS}_{base_BS}'
+        fname = f'tf{num_GPU}_extra{extra_time_ratio}_{num_small}s_{small_BS}_{base_BS}'
         # load: npy = np.load('filename.npy', allow_pickle=True)
         # read: npy.item()['xxx']
-        np.save(f'tf_npy/{filename}.npy', content)
+        np.save(f'tf_npy/{fname}.npy', content)
         # load: model = keras.models.load_model('directory_path')
         # The warning causes since there is no {model.compile()} in the server code.
-        self.model.save(f'tf_model/{filename}')
+        self.model.save(f'tf_model/{fname}')
 
 ################################################################
 ######## Worker ########
