@@ -1,4 +1,4 @@
-# clear; python DBSL.py -a='140.109.23.236' -w=5 -r= &
+# clear; python DBSL_warmup_baseline.py -a='140.109.23.236' -w=5 -r= &
 # server at gpu08
 import argparse
 import os
@@ -16,12 +16,12 @@ import tf_cifar_resnet
 #### hyperparameter ####
 # GPU setting
 num_GPU = 4
-num_small = 1
+num_small = 0
 num_large = num_GPU - num_small
 # batch size and learning rate and extra time rate
 base_BS = 500
 base_LR = 1e-1
-extra_time_ratio = 1.1
+extra_time_ratio = 1
 # get small_BS, base_data, small_data
 ## should modify num_small && extra_time_ratio
 def count_small_BS_data_size():
@@ -134,7 +134,7 @@ class ParameterServer(object):
             'push_time': self.push_time_history,
             'train_loss': self.train_loss_history, 'train_acc': self.train_acc_history,
             'test_loss': self.test_loss_history, 'test_acc': self.test_acc_history}
-        fname = f'tf{num_GPU}_extra{extra_time_ratio}_{num_small}s_{small_BS}_{base_BS}'
+        fname = 'tf_warmup_500'
         # load: npy = np.load('filename.npy', allow_pickle=True)
         # read: npy.item()['xxx']
         np.save(f'tf_npy/{fname}.npy', content)
@@ -178,6 +178,9 @@ class Worker(object):
                 ParameterServer.get_mission_model_bs_lr,
                 args=(self.ps_rref, self.rank))
             self.model.set_weights(weights)
+            # reset lr warmup
+            if epoch < 5:
+                learning_rate *= ((epoch + 1) / 5)
             # check mission complete
             if mission_complete:
                 return

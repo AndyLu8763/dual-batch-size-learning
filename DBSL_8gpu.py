@@ -1,5 +1,5 @@
-# clear; python DBSL.py -a='140.109.23.236' -w=5 -r= &
-# server at gpu08
+# clear; python DBSL_8gpu.py -a='140.109.23.110' -w=9 -r= &
+# server at gpu14
 import argparse
 import os
 import threading
@@ -15,7 +15,7 @@ import tf_cifar_resnet
 
 #### hyperparameter ####
 # GPU setting
-num_GPU = 4
+num_GPU = 8
 num_small = 1
 num_large = num_GPU - num_small
 # batch size and learning rate and extra time rate
