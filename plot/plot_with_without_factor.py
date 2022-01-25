@@ -25,26 +25,33 @@ extra = '1.1'
 ls = [1, 2, 3]
 small = [38, 87, 127]
 with_w = []
+with_sqrt_w = []
 without_w = []
 for num1, num2 in zip(ls, small):
     with_w.append(restruct_array(
         np.load(f'./{dir_path}/tf_extra{extra}_{num1}s_{num2}_{base}.npy', allow_pickle=True)
+    ))
+    with_sqrt_w.append(restruct_array(
+        np.load(f'./{dir_path}/tf_sqrt_extra{extra}_{num1}s_{num2}_{base}.npy', allow_pickle=True)
     ))
     without_w.append(restruct_array(
         np.load(f'./{dir_path}/tf_nw_extra{extra}_{num1}s_{num2}_{base}.npy', allow_pickle=True)
     ))
 
 with_label = []
+with_sqrt_label = []
 without_label = []
 for num1, num2 in zip(ls, small):
-    with_label.append(f'{num1} small, $B_S={num2}$, use')
-    without_label.append(f'{num1} small, $B_S={num2}$, -')
+    with_label.append(f'{num1} small, $d_S / d_L$')
+    with_sqrt_label.append((f'{num1} small,' + '$\sqrt{d_S / d_L}$'))
+    without_label.append(f'{num1} small, -')
 
 ## testing loss
 plt.figure(dpi=DPI)
 for i in range(len(with_label)):
     plt.plot(np.arange(1, 561)/4, with_w[i][3], label=with_label[i], linewidth=1)
-    plt.plot(np.arange(1, 561)/4, without_w[i][3], '--', label=without_label[i], linewidth=1)
+    plt.plot(np.arange(1, 561)/4, with_sqrt_w[i][3], '--', label=with_sqrt_label[i], linewidth=1)
+    plt.plot(np.arange(1, 561)/4, without_w[i][3], ':', label=without_label[i], linewidth=1)
 plt.ylim(1, 5)
 #plt.title('The Testing Loss versus the Training Epoch')
 plt.xlabel('Epoch')
@@ -56,7 +63,8 @@ plt.savefig('loss_MUfactor.png', transparent=True)
 plt.figure(dpi=DPI)
 for i in range(len(with_label)):
     plt.plot(np.arange(1, 561)/4, with_w[i][4], label=with_label[i], linewidth=1)
-    plt.plot(np.arange(1, 561)/4, without_w[i][4], '--', label=without_label[i], linewidth=1)
+    plt.plot(np.arange(1, 561)/4, with_sqrt_w[i][4], '--', label=with_sqrt_label[i], linewidth=1)
+    plt.plot(np.arange(1, 561)/4, without_w[i][4], ':', label=without_label[i], linewidth=1)
 #plt.title('The Testing Accuracy versus the Training Epoch')
 plt.xlabel('Epoch')
 plt.ylabel('Testing Accuracy')
