@@ -8,9 +8,12 @@ set key top right Left
 set xrange [-5:145]
 set yrange [1:5]
 
-plot './csv/loss_MUfactor.csv' using 1:2 with lines title '1 small, B_S=38, use', \
-     './csv/loss_MUfactor.csv' using 1:3 with lines title '1 small, B_S=38, -' dashtype 2, \
-     './csv/loss_MUfactor.csv' using 1:4 with lines title '2 small, B_S=87, use', \
-     './csv/loss_MUfactor.csv' using 1:5 with lines title '2 small, B_S=87, -' dashtype 2, \
-     './csv/loss_MUfactor.csv' using 1:6 with lines title '3 small, B_S=127, use', \
-     './csv/loss_MUfactor.csv' using 1:7 with lines title '3 small, B_S=127, -' dashtype 2
+plot './csv/loss_MUfactor.csv' using 1:2 with lines title '1 small, d_S/d_L', \
+     './csv/loss_MUfactor.csv' using 1:3 with lines title '1 small, √(d_S/d_L)' dashtype 2, \
+     './csv/loss_MUfactor.csv' using 1:4 with lines title '1 small, -' dashtype 3, \
+     './csv/loss_MUfactor.csv' using 1:5 with lines title '2 small, d_S/d_L', \
+     './csv/loss_MUfactor.csv' using 1:6 with lines title '2 small, √(d_S/d_L)' dashtype 2, \
+     './csv/loss_MUfactor.csv' using 1:7 with lines title '2 small, -' dashtype 3, \
+     './csv/loss_MUfactor.csv' using 1:8 with lines title '3 small, d_S/d_L', \
+     './csv/loss_MUfactor.csv' using 1:9 with lines title '3 small, √(d_S/d_L)' dashtype 2, \
+     './csv/loss_MUfactor.csv' using 1:10 with lines title '3 small, -' dashtype 3
