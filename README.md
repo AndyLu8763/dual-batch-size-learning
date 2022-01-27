@@ -1,6 +1,7 @@
 # Dual Batch Size Learning
 
 ## Environment
+- python 3.9
 - cudatoolkit 11.3
 - pytorch 1.10.1
 - tensorflow 2.6.2
@@ -13,6 +14,7 @@ conda create -n $(env_name)
 ```
 1. install one by one by one:
 ```
+conda install python=3.9 -c conda-forge
 conda install cudatoolkit=11.3 -c nvidia
 conda install pytorch=1.10.1 torchvision=0.11.2 -c pytorch
 conda install matplotlib scikit-learn tensorflow=2.6.2 -c conda-forge
@@ -28,7 +30,7 @@ conda install matplotlib scikit-learn tensorflow=2.6.2 -c conda-forge
     ```
     2. install all packages
     ```
-    conda install matplotlib scikit-learn cudatoolkit=11.3 pytorch=1.10.1 torchvision=0.11.2 tensorflow=2.6.2
+    conda install matplotlib scikit-learn python=3.9 cudatoolkit=11.3 pytorch=1.10.1 torchvision=0.11.2 tensorflow=2.6.2
     ```
 
 ## DBSL
