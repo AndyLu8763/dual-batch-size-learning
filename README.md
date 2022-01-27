@@ -18,7 +18,7 @@ conda install pytorch=1.10.1 torchvision=0.11.2 -c pytorch
 conda install matplotlib scikit-learn tensorflow=2.6.2 -c conda-forge
 ```
 2. setting channel and install once
-    1. vim ~/.condarc
+    1. vim `~/.condarc`
     ```
     channels:
       - pytorch
