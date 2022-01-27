@@ -36,6 +36,10 @@ Run `DBSL.py` by:
 ```
 python DBSL.py -a='$(serverIP)' -w=$(wordSize) -r=$(rank)
 ```
+- You should check ufw first
+  - need the permission to access any `port` of the devices
+  - `ufw allow from $(deviceIP)`
+  - suck PyTorch RPC zzz...
 - addres: Server IP
 - world: numbers of machines on parameter server
 - rank: 1~(w-1) if worker, 0 if server
