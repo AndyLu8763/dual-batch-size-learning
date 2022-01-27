@@ -39,7 +39,7 @@ python DBSL.py -a='$(serverIP)' -w=$(wordSize) -r=$(rank)
 - You should check ufw first
   - need the permission to access any `port` of the devices
   - `ufw allow from $(deviceIP)`
-  - maybe you also need to modify `\etc\hosts` and comment `127.0.0.1 localhost`
+  - maybe you also need to modify `/etc/hosts` and comment `127.0.0.1 localhost`
   - suck PyTorch RPC zzz...
 - addres: Server IP
 - world: numbers of machines on parameter server
