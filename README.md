@@ -40,6 +40,7 @@ python DBSL.py -a='$(serverIP)' -w=$(wordSize) -r=$(rank)
 - world: numbers of machines on parameter server
 - rank: 1~(w-1) if worker, 0 if server
 - hyperparameters in code:
+    - a, b: device information, get from linear regression
     - num_GPU, num_small
     - base_BS, base_LR
     - extra_time_ratio
