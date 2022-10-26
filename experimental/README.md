@@ -1,4 +1,4 @@
-# Experimental of the Dual Batch Size Learning
+# Experimental Project of the Dual Batch Size Learning
 
 ## Environment (Recommendation)
 - python 3.10
