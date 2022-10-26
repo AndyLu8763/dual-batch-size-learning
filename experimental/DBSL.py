@@ -21,7 +21,7 @@ num_GPU = 4
 num_small = 1
 num_large = num_GPU - num_small
 # batch size and learning rate and extra time rate
-base_BS = 500
+base_BS = 3000
 base_LR = 1e-1
 extra_time_ratio = 1.1
 # get small_BS, base_data, small_data
@@ -29,7 +29,7 @@ extra_time_ratio = 1.1
 def count_small_BS_data_size():
     # cifar10/100, resnet18, RTX3090
     # ax+b
-    a, b = 0.00056607, 0.014041204118283607############################################################################################### here ###
+    a, b = 0.00022246, 0.004627985663009579
     num_train_data = 50000
     # t = (a+b/x1)*d1 = (a+b/x2)*d2
     time_base = (a + b/base_BS) * num_train_data / num_GPU
