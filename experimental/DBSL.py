@@ -1,4 +1,4 @@
-# clear; python DBSL.py -a='gpu09.iis.sinica.edu.tw' -w=5 -r= &
+# clear; python test/DBSL.py -a='140.109.23.230' -w=5 -r= &
 # server: gpu09
 # worker: gpu06, gpu07, gpu08, gpu14
 # For CIFAR-10/100, ResNet-18, RTX-3090
@@ -18,12 +18,12 @@ import tf_cifar_resnet
 #### hyperparameter ####
 # GPU setting
 num_GPU = 4
-num_small = 1
+num_small = 0
 num_large = num_GPU - num_small
 # batch size and learning rate and extra time rate
-base_BS = 3000
+base_BS = 1000
 base_LR = 1e-1
-extra_time_ratio = 1.1
+extra_time_ratio = 1.02
 # get small_BS, base_data, small_data
 ## should modify num_small && extra_time_ratio
 def count_small_BS_data_size():
@@ -136,13 +136,13 @@ class ParameterServer(object):
             'push_time': self.push_time_history,
             'train_loss': self.train_loss_history, 'train_acc': self.train_acc_history,
             'test_loss': self.test_loss_history, 'test_acc': self.test_acc_history}
-        fname = f'tf{num_GPU}_extra{extra_time_ratio}_{num_small}s_{small_BS}_{base_BS}'
+        fname = f'{num_GPU}GPU_{extra_time_ratio}extra_{num_small}small_{small_BS}SBatch_{base_BS}LBatch'
         # load: npy = np.load('filename.npy', allow_pickle=True)
         # read: npy.item()['xxx']
-        np.save(f'tf_npy/{fname}.npy', content)
+        np.save(f'DBSL_npy/{fname}.npy', content)
         # load: model = keras.models.load_model('directory_path')
         # The warning causes since there is no {model.compile()} in the server code.
-        self.model.save(f'tf_model/{fname}')
+        self.model.save(f'DBSL_model/{fname}')
 
 ################################################################
 ######## Worker ########

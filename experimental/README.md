@@ -28,6 +28,9 @@
   conda activate $(env_name)
   ```
 
+## Create Folders
+`mkdir tf_npy tf_model`
+
 <!--
 ## DBSL
 Run `DBSL.py` by:
