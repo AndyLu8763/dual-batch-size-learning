@@ -1,4 +1,4 @@
-# clear; python test/DBSL.py -a='140.109.23.230' -w=5 -r= &
+# clear; python test/DBSL.py -a='' -w=5 -r= &
 # server: gpu09
 # worker: gpu06, gpu07, gpu08, gpu14
 # For CIFAR-10/100, ResNet-18, RTX-3090
@@ -279,7 +279,6 @@ def run_program(rank, world_size, addr, port):
     rpc.shutdown()
 
 ################################################################
-# clear; python thesis/chimera.py -a='140.109.23.236' -w=5 -r=
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Multiple Batch Sizes Asynchronous Learning via Parameter Server')
@@ -299,8 +298,8 @@ if __name__ == '__main__':
     parser.add_argument(
         '-p', '--master_port',
         type=str,
-        default='48763',
-        help='Port that master is listening on, default "48763".')
+        default='8763',
+        help='Port that master is listening on, default "8763".')
     
     args = parser.parse_args()
     assert args.rank is not None, 'Must provide rank argument.'

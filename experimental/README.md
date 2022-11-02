@@ -1,10 +1,10 @@
-# Experimental Project of the Dual Batch Size Learning
+# Efficient Dual Batch Size Deep Learning
 
 ## Environment (Recommendation)
 - python 3.10
-- cudatoolkit 11.6
-- pytorch 1.12
-- torchvision 0.13
+- cuda 11.7
+- pytorch 1.13
+- torchvision 0.14
 - tensorflow 2.10
 
 ## Dataset and Model
@@ -14,19 +14,24 @@
   - K. He, X. Zhang, S. Ren, and J. Sun. [Deep residual learning for image recognition](https://doi.org/10.48550/arXiv.1512.03385). In Proceedings of the IEEE conference on computer vision and pattern recognition, pages 770–778, 2016.
 
 ## Installation
-1. First, create a new virtual environment. Recommend using `conda` to control it.
+1. Create a new virtual environment. Recommend using `conda` to control it.
   ```
   conda create -n $(env_name)
   ```
-2. Second, install the necessary packages.
+2. Install `python` and its accessary packages.
   ```
-  conda install -n $(env_name) -c pytorch -c conda-forge jupyter matplotlib scikit-learn pytorch torchvision tensorflow cudatoolkit
+  conda install -n $(env_name) -c conda-forge python
   ```
-  You could also appoint the package's version, e.g., `cudatoolkit=11.6`.
-3. Third, activate the virtual environment.
+  You could also appoint the package's version, e.g., `python=3.10`.
+3. Activate the virtual environment.
   ```
   conda activate $(env_name)
   ```
+4. Install other packages by `pip`.
+  ```
+  pip install scipy tensorflow torch torchvision
+  ```
+  Since that TensorFlow official support doesn't offer installation by `conda`, using `conda` instead of `pip` might occur unexpected errors.
 
 ## Create Folders
 `mkdir tf_npy tf_model`
