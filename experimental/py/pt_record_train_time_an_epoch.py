@@ -66,9 +66,9 @@ num_workers = 2
 # In[ ]:
 
 
-start_batch = 1
-end_batch = 500 + 1
-step = 1
+start_batch = 10
+end_batch = 1000 + 1
+step = 10
 record_train_time = np.zeros((end_batch - start_batch) // step + 1)
 
 
