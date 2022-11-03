@@ -1,4 +1,5 @@
-# clear; python test/DBSL.py -a='' -w=5 -r= &
+#Be sure that you have the directories: DBSL_npy DBSL_model
+# clear; python DBSL3090.py -a='140.109.23.230' -w=5 -r= &
 # server: gpu09
 # worker: gpu06, gpu07, gpu08, gpu14
 # For CIFAR-10/100, ResNet-18, RTX-3090
@@ -29,7 +30,7 @@ extra_time_ratio = 1.02
 def count_small_BS_data_size():
     # cifar10/100, resnet18, RTX3090
     # ax+b
-    a, b = 0.00022246, 0.004627985663009579
+    a, b = 0.00022762, 0.00656356471087885
     num_train_data = 50000
     # t = (a+b/x1)*d1 = (a+b/x2)*d2
     time_base = (a + b/base_BS) * num_train_data / num_GPU
