@@ -22,7 +22,7 @@ num_GPU = 4
 num_small = 0
 num_large = num_GPU - num_small
 # batch size and learning rate and extra time rate
-base_BS = 1000
+base_BS = 500
 base_LR = 1e-1
 extra_time_ratio = 1.02
 # get small_BS, base_data, small_data
