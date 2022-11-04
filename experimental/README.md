@@ -33,6 +33,13 @@
   ```
   Since that TensorFlow official support doesn't offer installation by `conda`, using `conda` instead of `pip` might occur unexpected errors.
 
+<!--
+- just install by `conda`
+  ```
+  conda install -c pytorch -c nvidia -c conda-forge python cuda notebook scikit-learn pytorch torchvision tensorflow
+  ```
+-->
+
 ## Create Folders
 `mkdir tf_npy tf_model`
 
