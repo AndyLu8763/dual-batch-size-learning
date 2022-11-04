@@ -20,7 +20,7 @@
   ```
 2. Install `python` and `cuda`.
   ```
-  conda install -n $(env_name) -c nvidia -c conda-forge python cuda jupyter scikit-learn
+  conda install -n $(env_name) -c nvidia -c conda-forge python cuda notebook scikit-learn
   ```
   You could also appoint the package's version, e.g., `python=3.10`.
 3. Activate the virtual environment.
@@ -29,7 +29,7 @@
   ```
 4. Install other packages by `pip`.
   ```
-  pip install scipy tensorflow torch torchvision
+  pip install tensorflow torch torchvision
   ```
   Since that TensorFlow official support doesn't offer installation by `conda`, using `conda` instead of `pip` might occur unexpected errors.
 
