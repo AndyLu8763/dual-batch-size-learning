@@ -146,6 +146,7 @@ record_train_time = np.zeros((end_batch - start_batch) // step + 1)
 
 counter = 0
 for batch_size in range(start_batch, end_batch, step):
+    print(f'Batch Size = {batch_size}')
     # warming
     model.fit(
         datagen.flow(x_train[:batch_size], y_train[:batch_size], batch_size=batch_size),

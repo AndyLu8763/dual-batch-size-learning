@@ -77,6 +77,7 @@ record_train_time = np.zeros((end_batch - start_batch) // step + 1)
 
 counter = 0
 for batch_size in range(start_batch, end_batch, step):
+    print(f'Batch Size = {batch_size}')
     # start
     record_train_time[counter] = time.time()
     # dataloader
