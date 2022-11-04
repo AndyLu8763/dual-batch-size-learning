@@ -20,7 +20,7 @@
   ```
 2. Install `python` and `cuda`.
   ```
-  conda install -n $(env_name) -c nvidia -c conda-forge python cuda
+  conda install -n $(env_name) -c nvidia -c conda-forge python cuda jupyter scikit-learn
   ```
   You could also appoint the package's version, e.g., `python=3.10`.
 3. Activate the virtual environment.
