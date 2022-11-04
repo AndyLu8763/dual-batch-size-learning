@@ -24,7 +24,7 @@ num_large = num_GPU - num_small
 # batch size and learning rate and extra time rate
 base_BS = 1000
 base_LR = 1e-1
-extra_time_ratio = 1.02
+extra_time_ratio = 1.05
 # get small_BS, base_data, small_data
 ## should modify num_small && extra_time_ratio
 def count_small_BS_data_size():

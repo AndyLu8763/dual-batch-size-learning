@@ -6,6 +6,7 @@
 
 import time
 
+import torch
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
@@ -134,9 +135,9 @@ epochs = 1
 # In[ ]:
 
 
-start_batch = 10
+start_batch = 1
 end_batch = 1000 + 1
-step = 10
+step = 1
 record_train_time = np.zeros((end_batch - start_batch) // step + 1)
 
 
