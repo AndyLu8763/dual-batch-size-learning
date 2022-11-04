@@ -18,9 +18,9 @@
   ```
   conda create -n $(env_name)
   ```
-2. Install `python` and its accessary packages.
+2. Install `python` and `cuda`.
   ```
-  conda install -n $(env_name) -c conda-forge python
+  conda install -n $(env_name) -c nvidia -c conda-forge python cuda
   ```
   You could also appoint the package's version, e.g., `python=3.10`.
 3. Activate the virtual environment.
