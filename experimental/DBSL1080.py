@@ -30,7 +30,7 @@ extra_time_ratio = 1.05
 def count_small_BS_data_size():
     # cifar10/100, resnet18, RTX3090
     # ax+b
-    a, b = 0.00059873, 0.012186642373401613
+    a, b = 0.00056514, 0.015418572941770431
     num_train_data = 50000
     # t = (a+b/x1)*d1 = (a+b/x2)*d2
     time_base = (a + b/base_BS) * num_train_data / num_GPU

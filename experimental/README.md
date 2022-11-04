@@ -3,6 +3,7 @@
 ## Environment (Recommendation)
 - python 3.10
 - cuda 11.7
+- cudnn 8.5
 - pytorch 1.13
 - torchvision 0.14
 - tensorflow 2.10
@@ -18,18 +19,18 @@
   ```
   conda create -n $(env_name)
   ```
-2. Install `python` and `cuda`.
+2. Install conda packages.
   ```
-  conda install -n $(env_name) -c nvidia -c conda-forge python cuda notebook scikit-learn
+  conda install -n $(env_name) -c pytorch -c nvidia -c conda-forge matplotlib notebook scikit-learn pytorch torchvision
   ```
   You could also appoint the package's version, e.g., `python=3.10`.
 3. Activate the virtual environment.
   ```
   conda activate $(env_name)
   ```
-4. Install other packages by `pip`.
+4. Install other packages by `pip` in the conda virtual environment.
   ```
-  pip install tensorflow torch torchvision
+  pip install tensorflow
   ```
   Since that TensorFlow official support doesn't offer installation by `conda`, using `conda` instead of `pip` might occur unexpected errors.
 
