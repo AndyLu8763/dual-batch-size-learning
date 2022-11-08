@@ -47,8 +47,8 @@ small_BS, base_data, small_data = count_small_BS_data_size()
 BS_list = [small_BS] * num_small + [base_BS] * num_large
 LR_list = [base_LR] * num_GPU
 # scheduler
-rounds = 140
-threshold = [80, 120]
+rounds = 180
+threshold = [60, 120]
 gamma = 0.2
 
 #### static ####

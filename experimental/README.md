@@ -28,30 +28,31 @@ K. -W. Lu, P. Liu, D. -Y. Hong and J. -J. Wu, "Efficient Dual Batch Size Deep Le
   ```
 3. Add commands to `.bashrc`
   ```
-  echo 'conda activate dbsl' > ~/.bashrc
   echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/' > ~/.bashrc
+  echo 'conda activate dbsl' > ~/.bashrc
   ```
-4. Install conda packages.
+4. Add commands to the virtual environment.
+  ```
+  mkdir -p $CONDA_PREFIX/etc/conda/activate.d
+  echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/' > $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
+  ```
+5. Install conda packages.
   ```
   conda install -n dbsl -c pytorch -c conda-forge -c nvidia cudatoolkit cudnn matplotlib notebook scikit-learn pytorch torchvision
   ```
   You could also appoint the package's version, e.g., `python=3.10`.
-5. Install other packages by `pip` in the conda virtual environment.
+6. Install other packages by `pip` in the conda virtual environment.
   ```
   pip install tensorflow
   ```
   Since that TensorFlow official support doesn't offer installation by `conda`, using `conda` instead of `pip` might occur unexpected errors.
 
-<!--
-- just install by `conda`
-  ```
-  conda install -c pytorch -c nvidia -c conda-forge python cuda notebook scikit-learn pytorch torchvision tensorflow
-  ```
--->
-
 ## Create Folders
-`mkdir tf_npy tf_model`
-
+`mkdir DBSL_npy DBSL_model`
+scp -r dual-batch-size-learning/experimental/ r08944044@csl.iis.sinica.edu.tw:~
+python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
+python experimental/DBSL1080.py -a='140.109.23.144' -w=5 -r= &
+python experimental/DBSL3090.py -a='140.109.23.230' -w=5 -r= &
 <!--
 ## DBSL
 Run `DBSL.py` by:
