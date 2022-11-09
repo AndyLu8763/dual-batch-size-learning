@@ -26,33 +26,108 @@ K. -W. Lu, P. Liu, D. -Y. Hong and J. -J. Wu, "Efficient Dual Batch Size Deep Le
   ```
   conda activate dbsl
   ```
-3. Add commands to `.bashrc`
+3. Install conda packages.
   ```
-  echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/' > ~/.bashrc
-  echo 'conda activate dbsl' > ~/.bashrc
-  ```
-4. Add commands to the virtual environment.
-  ```
-  mkdir -p $CONDA_PREFIX/etc/conda/activate.d
-  echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/' > $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
-  ```
-5. Install conda packages.
-  ```
-  conda install -n dbsl -c pytorch -c conda-forge -c nvidia cudatoolkit cudnn matplotlib notebook scikit-learn pytorch torchvision
+  conda install -c conda-forge python=3.10 matplotlib notebook scikit-learn
   ```
   You could also appoint the package's version, e.g., `python=3.10`.
-6. Install other packages by `pip` in the conda virtual environment.
+4. Install other packages by `pip` in the conda virtual environment.
   ```
-  pip install tensorflow
+  pip install tensorflow torch torchvision
   ```
   Since that TensorFlow official support doesn't offer installation by `conda`, using `conda` instead of `pip` might occur unexpected errors.
+  If it still occur errors, try to install all package except `python` by using `pip`.
 
 ## Create Folders
 `mkdir DBSL_npy DBSL_model`
+
+
+
+## Errr....
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/extras/CUPTI/lib64
+echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/' > ~/.bashrc
+echo 'conda activate dbsl' > ~/.bashrc
 scp -r dual-batch-size-learning/experimental/ r08944044@csl.iis.sinica.edu.tw:~
 python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
 python experimental/DBSL1080.py -a='140.109.23.144' -w=5 -r= &
 python experimental/DBSL3090.py -a='140.109.23.230' -w=5 -r= &
+
+---
+
+2022-11-09 16:53:51.830616: W tensorflow/core/common_runtime/bfc_allocator.cc:290] Allocator (GPU_0_bfc) ran out of memory trying to allocate 108.00MiB with freed_by_count=0. The caller indicates that this is not a failure, but this may mean that there could be performance gains if more memory were available.
+
+---
+
+Traceback (most recent call last):
+  File "/local/r08944044/experimental/DBSL1080.py", line 311, in <module>
+    run_program(args.rank, args.world_size, args.master_addr, args.master_port)
+  File "/local/r08944044/experimental/DBSL1080.py", line 279, in run_program
+    run_parameter_server(world_size)
+  File "/local/r08944044/experimental/DBSL1080.py", line 254, in run_parameter_server
+    torch.futures.wait_all(future_list)
+  File "/local/r08944044/miniconda3/envs/dbsl/lib/python3.10/site-packages/torch/futures/__init__.py", line 313, in wait_all
+    return [fut.wait() for fut in torch._C._collect_all(cast(List[torch._C.Future], futures)).wait()]
+TypeError: TypeError: ResourceExhaustedError.__init__() missing 2 required positional arguments: 'op' and 'message'
+
+At:
+  /local/r08944044/miniconda3/envs/dbsl/lib/python3.10/site-packages/torch/distributed/rpc/internal.py(220): _handle_exception
+
+---
+
+2022-11-09 16:53:58.305846: W tensorflow/core/common_runtime/bfc_allocator.cc:491] ****************************************************************************************************
+2022-11-09 16:53:58.305871: W tensorflow/core/framework/op_kernel.cc:1780] OP_REQUIRES failed at conv_grad_input_ops.cc:327 : RESOURCE_EXHAUSTED: OOM when allocating tensor with shape[500,512,4,4] and type float on /job:localhost/replica:0/task:0/device:GPU:0 by allocator GPU_0_bfc
+On WorkerInfo(id=3, name=worker_3):
+ResourceExhaustedError()
+Traceback (most recent call last):
+  File "/local/r08944044/miniconda3/envs/dbsl/lib/python3.10/site-packages/torch/distributed/rpc/internal.py", line 206, in _run_function
+    result = python_udf.func(*python_udf.args, **python_udf.kwargs)
+  File "/local/r08944044/experimental/DBSL1080.py", line 244, in run_worker
+    worker.train()
+  File "/local/r08944044/experimental/DBSL1080.py", line 203, in train
+    train_logs = self.model.fit(
+  File "/local/r08944044/miniconda3/envs/dbsl/lib/python3.10/site-packages/keras/utils/traceback_utils.py", line 70, in error_handler
+    raise e.with_traceback(filtered_tb) from None
+  File "/local/r08944044/miniconda3/envs/dbsl/lib/python3.10/site-packages/tensorflow/python/eager/execute.py", line 54, in quick_execute
+    tensors = pywrap_tfe.TFE_Py_Execute(ctx._handle, device_name, op_name,
+tensorflow.python.framework.errors_impl.ResourceExhaustedError: Graph execution error:
+
+Detected at node 'gradient_tape/model/conv2d_19/Conv2D/Conv2DBackpropInput' defined at (most recent call last):
+    File "/local/r08944044/miniconda3/envs/dbsl/lib/python3.10/site-packages/torch/distributed/rpc/internal.py", line 206, in _run_function
+      result = python_udf.func(*python_udf.args, **python_udf.kwargs)
+    File "/local/r08944044/experimental/DBSL1080.py", line 244, in run_worker
+      worker.train()
+    File "/local/r08944044/experimental/DBSL1080.py", line 203, in train
+      train_logs = self.model.fit(
+    File "/local/r08944044/miniconda3/envs/dbsl/lib/python3.10/site-packages/keras/utils/traceback_utils.py", line 65, in error_handler
+      return fn(*args, **kwargs)
+    File "/local/r08944044/miniconda3/envs/dbsl/lib/python3.10/site-packages/keras/engine/training.py", line 1564, in fit
+      tmp_logs = self.train_function(iterator)
+    File "/local/r08944044/miniconda3/envs/dbsl/lib/python3.10/site-packages/keras/engine/training.py", line 1160, in train_function
+      return step_function(self, iterator)
+    File "/local/r08944044/miniconda3/envs/dbsl/lib/python3.10/site-packages/keras/engine/training.py", line 1146, in step_function
+      outputs = model.distribute_strategy.run(run_step, args=(data,))
+    File "/local/r08944044/miniconda3/envs/dbsl/lib/python3.10/site-packages/keras/engine/training.py", line 1135, in run_step
+      outputs = model.train_step(data)
+    File "/local/r08944044/miniconda3/envs/dbsl/lib/python3.10/site-packages/keras/engine/training.py", line 997, in train_step
+      self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
+    File "/local/r08944044/miniconda3/envs/dbsl/lib/python3.10/site-packages/keras/optimizers/optimizer_v2/optimizer_v2.py", line 576, in minimize
+      grads_and_vars = self._compute_gradients(
+    File "/local/r08944044/miniconda3/envs/dbsl/lib/python3.10/site-packages/keras/optimizers/optimizer_v2/optimizer_v2.py", line 634, in _compute_gradients
+      grads_and_vars = self._get_gradients(
+    File "/local/r08944044/miniconda3/envs/dbsl/lib/python3.10/site-packages/keras/optimizers/optimizer_v2/optimizer_v2.py", line 510, in _get_gradients
+      grads = tape.gradient(loss, var_list, grad_loss)
+Node: 'gradient_tape/model/conv2d_19/Conv2D/Conv2DBackpropInput'
+OOM when allocating tensor with shape[500,512,4,4] and type float on /job:localhost/replica:0/task:0/device:GPU:0 by allocator GPU_0_bfc
+         [[{{node gradient_tape/model/conv2d_19/Conv2D/Conv2DBackpropInput}}]]
+Hint: If you want to see a list of allocated tensors when OOM happens, add report_tensor_allocations_upon_oom to RunOptions for current allocation info. This isn't available when running in Eager mode.
+ [Op:__inference_train_function_398882]
+
+[W tensorpipe_agent.cpp:726] RPC agent for worker_3 encountered error when reading incoming request from server_0: EOF: end of file (this error originated at tensorpipe/transport/uv/connection_impl.cc:132)
+
+---
+ 
+
 <!--
 ## DBSL
 Run `DBSL.py` by:
