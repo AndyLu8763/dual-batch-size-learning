@@ -19,10 +19,10 @@ import tf_cifar_resnet
 #### hyperparameter ####
 # GPU setting
 num_GPU = 7
-num_small = 0
+num_small = 1
 num_large = num_GPU - num_small
 # batch size and learning rate and extra time rate
-base_BS = 500
+base_BS = 1000
 base_LR = 1e-1
 extra_time_ratio = 1.05
 # get small_BS, base_data, small_data
@@ -47,9 +47,9 @@ small_BS, base_data, small_data = count_small_BS_data_size()
 BS_list = [small_BS] * num_small + [base_BS] * num_large
 LR_list = [base_LR] * num_GPU
 # scheduler
-rounds = 140
-threshold = [80, 120]
-gamma = 0.5
+rounds = 175
+threshold = [100, 150]
+gamma = 0.2
 
 #### static ####
 # parameter setting
