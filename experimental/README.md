@@ -18,25 +18,20 @@ K. -W. Lu, P. Liu, D. -Y. Hong and J. -J. Wu, "Efficient Dual Batch Size Deep Le
   - K. He, X. Zhang, S. Ren, and J. Sun. [Deep residual learning for image recognition](https://doi.org/10.48550/arXiv.1512.03385). In Proceedings of the IEEE conference on computer vision and pattern recognition, pages 770–778, 2016.
 
 ## Installation
-1. Create a new virtual environment. Recommend using `conda` to control it.
+1. Upgrade CUDA at https://developer.nvidia.com/cuda-downloads.
+2. Create a new virtual environment. Recommend using `conda` to control it.
   ```
   conda create -n dbsl
   ```
-2. Activate the virtual environment.
+3. Activate the virtual environment.
   ```
   conda activate dbsl
   ```
-3. Install conda packages.
+4. Install conda packages.
   ```
-  conda install -c conda-forge python=3.10 matplotlib notebook scikit-learn
+  conda install -c pytorch -c conda-forge -c nvidia python=3.10 matplotlib notebook scikit-learn pytorch torchvision tensorflow
   ```
   You could also appoint the package's version, e.g., `python=3.10`.
-4. Install other packages by `pip` in the conda virtual environment.
-  ```
-  pip install tensorflow torch torchvision
-  ```
-  Since that TensorFlow official support doesn't offer installation by `conda`, using `conda` instead of `pip` might occur unexpected errors.
-  If it still occur errors, try to install all package except `python` by using `pip`.
 
 ## Create Folders
 `mkdir DBSL_npy DBSL_model`
@@ -44,10 +39,13 @@ K. -W. Lu, P. Liu, D. -Y. Hong and J. -J. Wu, "Efficient Dual Batch Size Deep Le
 
 
 ## Errr....
+python DBSL_6worker.py -a='140.109.23.232' -w=7 -r= &
+
+---
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/extras/CUPTI/lib64
-echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/' > ~/.bashrc
-echo 'conda activate dbsl' > ~/.bashrc
+echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/' >> ~/.bashrc
+echo 'conda activate dbsl' >> ~/.bashrc
 scp -r dual-batch-size-learning/experimental/ r08944044@csl.iis.sinica.edu.tw:~
 python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
 python experimental/DBSL1080.py -a='140.109.23.144' -w=5 -r= &
@@ -127,6 +125,8 @@ Hint: If you want to see a list of allocated tensors when OOM happens, add repor
 
 ---
  
+2022-11-10 15:36:51.109853: W tensorflow/core/common_runtime/bfc_allocator.cc:360] Garbage collection: deallocate free memory regions (i.e., allocations) so that we can re-allocate a larger region to avoid OOM due to memory fragmentation. If you see this message frequently, you are running near the threshold of the available device memory and re-allocation may incur great performance overhead. You may try smaller batch sizes to observe the performance impact. Set TF_ENABLE_GPU_GARBAGE_COLLECTION=false if you'd like to disable this feature.
+
 
 <!--
 ## DBSL
