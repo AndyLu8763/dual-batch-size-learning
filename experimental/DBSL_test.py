@@ -1,5 +1,5 @@
 #Be sure that you have the directories: DBSL_npy DBSL_model
-# clear; python DBSL_6worker.py -a='140.109.23.110' -w=7 -r= &
+# clear; python experimental/DBSL_test.py -a='140.109.23.110' -r= &
 # server: gpu14
 # worker: gpu06, gpu07, gpu08, gpu09, gpu10, gpu14
 # For CIFAR-10/100, ResNet-18, RTX-3090
@@ -18,9 +18,13 @@ import tf_cifar_resnet
 
 #### hyperparameter ####
 # GPU setting
-num_GPU = 7
-num_small = 1
+num_GPU = 6
+num_small = 6
 num_large = num_GPU - num_small
+# scheduler
+rounds = 140
+threshold = [80, 120]
+gamma = 0.2
 # batch size and learning rate and extra time rate
 base_BS = 1000
 base_LR = 1e-1
@@ -46,10 +50,6 @@ small_BS, base_data, small_data = count_small_BS_data_size()
 # create BS, LR list
 BS_list = [small_BS] * num_small + [base_BS] * num_large
 LR_list = [base_LR] * num_GPU
-# scheduler
-rounds = 175
-threshold = [100, 150]
-gamma = 0.2
 
 #### static ####
 # parameter setting
@@ -298,6 +298,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '-w', '--world_size',
         type=int,
+        default = num_GPU + 1,
         help='Total number of participating processes.')
     parser.add_argument(
         '-a', '--master_addr',
@@ -311,7 +312,6 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     assert args.rank is not None, 'Must provide rank argument.'
-    assert args.world_size is not None, 'Must provide world_size argument.'
     assert args.world_size > 1, 'There must be at least 1 server and 1 worker'
     assert args.master_addr is not None, 'Must provide master_addr argument.'
 

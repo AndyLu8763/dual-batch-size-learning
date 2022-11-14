@@ -36,8 +36,64 @@ K. -W. Lu, P. Liu, D. -Y. Hong and J. -J. Wu, "Efficient Dual Batch Size Deep Le
 ## Create Folders
 `mkdir DBSL_npy DBSL_model`
 
+### 80, 120, 140 - 5 GPUs
+- 0 small 1000
+  Epoch 126 BS 1000 LR 0.004000000000000001
+  train_loss: 0.3621405065059662, train_acc: 0.9092381000518799
+  test_loss: 1.4774372577667236, test_acc: 0.6129000186920166
+- 1 small
+  Epoch 155 BS 1000 LR 0.004000000000000001
+  train_loss: 0.7857744693756104, train_acc: 0.7660952210426331
+  test_loss: 1.2635349035263062, test_acc: 0.6449999809265137
+- 2 small 165
+  Epoch 121 BS 1000 LR 0.004000000000000001
+  train_loss: 0.4634036421775818, train_acc: 0.8686666488647461
+  test_loss: 1.2191914319992065, test_acc: 0.669700026512146
+- 3 small 237
+  Epoch 119 BS 1000 LR 0.004000000000000001
+  train_loss: 0.1065344363451004, train_acc: 0.9777143001556396
+  test_loss: 1.260744571685791, test_acc: 0.6890000104904175
+- 4small 297
+  Epoch 122 BS 1000 LR 0.004000000000000001
+  train_loss: 0.07687840610742569, train_acc: 0.9860000014305115
+  test_loss: 1.3130261898040771, test_acc: 0.6870999932289124
+- 5 small 349
+  Epoch 126 BS 349 LR 0.004000000000000001
+  train_loss: 0.046178147196769714, train_acc: 0.9934999942779541
+  test_loss: 1.3479220867156982, test_acc: 0.6884999871253967
 
 
+### 80, 120, 140 - 6 GPUs
+- 0 small, BS = 1000
+  Epoch 126 BS 1000 LR 0.004000000000000001
+  train_loss: 0.5886362195014954, train_acc: 0.8390856981277466
+  test_loss: 1.4859565496444702, test_acc: 0.605400025844574
+- 1small, BS = 62
+  Epoch 120 BS 1000 LR 0.004000000000000001
+  train_loss: 1.0873005390167236, train_acc: 0.681942880153656
+  test_loss: 1.425419807434082, test_acc: 0.6019999980926514
+- 2 small, BS = 138
+  Epoch 123 BS 138 LR 0.004000000000000001
+  train_loss: 0.5868402719497681, train_acc: 0.8245333433151245
+  test_loss: 1.1917192935943604, test_acc: 0.6675999760627747
+- 3 small, BS = 203
+  Epoch 124 BS 1000 LR 0.004000000000000001
+  train_loss: 0.19602468609809875, train_acc: 0.9521142840385437
+  test_loss: 1.2392641305923462, test_acc: 0.6819999814033508
+- 4 small, BS = 258
+  Epoch 125 BS 258 LR 0.004000000000000001
+  train_loss: 0.15854904055595398, train_acc: 0.9652923345565796
+  test_loss: 1.2823264598846436, test_acc: 0.6730999946594238
+- 5 small, BS = 307
+  Epoch 127 BS 307 LR 0.004000000000000001
+  train_loss: 0.10307334363460541, train_acc: 0.9820606112480164
+  test_loss: 1.3178762197494507, test_acc: 0.6808000206947327
+- 6 small, BS = 349
+  Epoch 127 BS 349 LR 0.004000000000000001
+  train_loss: 0.07780713587999344, train_acc: 0.9883595108985901
+  test_loss: 1.3448033332824707, test_acc: 0.6784999966621399
+
+<!--
 ## Errr....
 python DBSL_6worker.py -a='140.109.23.232' -w=7 -r= &
 
@@ -126,7 +182,7 @@ Hint: If you want to see a list of allocated tensors when OOM happens, add repor
 ---
  
 2022-11-10 15:36:51.109853: W tensorflow/core/common_runtime/bfc_allocator.cc:360] Garbage collection: deallocate free memory regions (i.e., allocations) so that we can re-allocate a larger region to avoid OOM due to memory fragmentation. If you see this message frequently, you are running near the threshold of the available device memory and re-allocation may incur great performance overhead. You may try smaller batch sizes to observe the performance impact. Set TF_ENABLE_GPU_GARBAGE_COLLECTION=false if you'd like to disable this feature.
-
+-->
 
 <!--
 ## DBSL
