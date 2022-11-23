@@ -29,7 +29,7 @@ K. -W. Lu, P. Liu, D. -Y. Hong and J. -J. Wu, "Efficient Dual Batch Size Deep Le
   ```
 4. Install conda packages.
   ```
-  conda install -c pytorch -c conda-forge -c nvidia python=3.10 matplotlib notebook scikit-learn pytorch torchvision tensorflow
+  conda install -c pytorch -c nvidia -c conda-forge python matplotlib notebook scikit-learn pytorch torchvision tensorflow
   ```
   You could also appoint the package's version, e.g., `python=3.10`.
 
