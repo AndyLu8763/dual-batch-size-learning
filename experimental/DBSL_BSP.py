@@ -57,6 +57,10 @@ momentum = 0.9
 decay = 0
 workers = 2
 eval_batch_size = 1000
+# counter to let GPU synchronize
+BSP_counter = 0
+# let large_BS update factor be 1, then small_BS update factor be small_data / base_data
+total_factor = small_data / base_data * num_small + num_large
 # max training times reserve for each worker
 record = int(2*rounds)
 # set to use GPU
@@ -110,19 +114,22 @@ class ParameterServer(object):
         print(f'Worker {worker_rank} epoch {epoch} now pushing model...')
         self = ps_rref.local_value()
         self.push_time_history[worker_rank, epoch] = time.time()
-        # average server and worker models' weights
-        # rewrite model lock, let all workers come in and average #############################################
-        counter = 0 #not here, outside this function
-        new_weights = self.model.get_weights().copy() #wrong, should be zero value
+        # average all worker models' return weights to be the new global model weights
+        # rewrite model lock, let all workers come in and average ####################################################
+        # worker_batch_size still not consider ######################################################################
+        new_weights = self.model.get_weights() #wrong, should be zero value, maybe not here, be the global variable, reset to 0 like counter ###################
+        ######################################## Does get_weight also not only include weight but also gradient??
         with self.model_lock:
-            if (counter != num_GPU):
+            update_factor = small_data / base_data if worker_batch_size == small_BS else 1
+            for i in range(len(new_weights)):
+                new_weights[i] += update_factor * worker_weights[i]
+            BSP_counter += 1
+            if BSP_counter == num_GPU:
                 for i in range(len(new_weights)):
-                    new_weights[i] += worker_weights[i]
-                counter += 1
-            else:
+                    new_weights[i] /= total_factor
                 self.model.set_weights(new_weights)
-                counter = 0
-        while (counter != 0):
+                BSP_counter = 0
+        while BSP_counter != 0:
             pass
         return self.model.get_weights()
         '''
