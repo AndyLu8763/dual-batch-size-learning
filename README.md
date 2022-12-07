@@ -8,19 +8,12 @@
 - torchvision 0.11.2
 
 ## Install Command
-Please use conda and create a new environment by:
-```
-conda create -n $(env_name)
-```
-1. install one by one by one:
-```
-conda install python=3.9 -c conda-forge
-conda install cudatoolkit=11.3 -c nvidia
-conda install pytorch=1.10.1 torchvision=0.11.2 -c pytorch
-conda install matplotlib scikit-learn tensorflow=2.6.2 -c conda-forge
-```
-2. setting channel and install once
-    1. vim `~/.condarc`
+1. Please use conda and create a new environment by:
+  ```
+  conda create -n $(env_name)
+  ```
+2. Install packages:
+  1. vim `~/.condarc` (Optional)
     ```
     channels:
       - pytorch
@@ -28,9 +21,10 @@ conda install matplotlib scikit-learn tensorflow=2.6.2 -c conda-forge
       - conda-forge
       - defaults
     ```
-    2. install all packages
+  2. install all packages
     ```
-    conda install matplotlib scikit-learn python=3.9 cudatoolkit=11.3 pytorch=1.10.1 torchvision=0.11.2 tensorflow=2.6.2
+    conda install matplotlib notebook scikit-learn python=3.9 cudatoolkit=11.3 pytorch=1.10 torchvision=0.11 tensorflow=2.6 \
+    -n $(env_name) -c pytorch -c nvidia -c conda-forge
     ```
 
 ## DBSL
