@@ -1,5 +1,5 @@
 # Be sure that you have the directories: DBSL_npy DBSL_model
-# clear; python experimental/DBSL_BSP.py -a='140.109.23.110' -r= &
+# clear; python experimental/DBSL_ASP.py -a='140.109.23.110' -r= &
 # server: gpu14
 # worker: gpu06, gpu07, gpu08, gpu09, gpu10, gpu14
 # For CIFAR-10/100, ResNet-18, RTX-3090
@@ -56,8 +56,6 @@ momentum = 0.9
 decay = 0
 workers = 2
 eval_batch_size = 1000
-# let large_BS update factor be 1, then small_BS update factor be small_data / base_data
-total_factor = small_data / base_data * num_small + num_large
 # max training times reserve for each worker
 record = int(2*rounds)
 # set to use GPU
@@ -90,11 +88,6 @@ class ParameterServer(object):
         self.train_acc_history = np.zeros((world_size, record))
         self.test_loss_history = np.zeros((world_size, record))
         self.test_acc_history = np.zeros((world_size, record))
-        # BSP controller
-        ## counter to let GPU synchronize
-        self.BSP_counter = 0
-        ## new global model weights
-        self.new_weights = self.model.get_weights()
     
     def count_epoch(self):
         with self.epoch_lock:
@@ -116,30 +109,18 @@ class ParameterServer(object):
         print(f'Worker {worker_rank} epoch {epoch} now pushing model...')
         self = ps_rref.local_value()
         self.push_time_history[worker_rank, epoch] = time.time()
-        # update the new model weights
+        # average server and worker models' weights
         with self.model_lock:
-            # set update factor
-            update_factor = small_data / base_data if worker_batch_size == small_BS else 1
-            # check whether the new round is begin
-            if self.BSP_counter == 0:
-                for i in range(len(self.new_weights)):
-                    self.new_weights[i] = tf.zeros_like(worker_weights[i])
-            # collect model weights
-            for i in range(len(self.new_weights)):
-                self.new_weights[i] += update_factor * worker_weights[i]
-            # ++counter
-            self.BSP_counter += 1
-            # check whether the new round is end
-            if self.BSP_counter == num_GPU:
-                for i in range(len(self.new_weights)):
-                    self.new_weights[i] /= total_factor
-                self.model.set_weights(self.new_weights)
-                self.BSP_counter = 0
-        # waiting other workers
-        while self.BSP_counter != 0:
-            pass
-        # return new model weights
-        return self.model.get_weights()
+            server_weights = self.model.get_weights()
+            update_factor = 1
+            if worker_batch_size == small_BS:
+                update_factor = small_data / base_data
+            for i in range(len(server_weights)):
+                server_weights[i] = ((2 - update_factor) * server_weights[i]
+                                     + update_factor * worker_weights[i]
+                                    ) / 2
+            self.model.set_weights(server_weights)
+            return self.model.get_weights()
 
     def record_loss_acc(ps_rref, worker_rank, epoch,
                         train_loss, train_acc, test_loss, test_acc):
