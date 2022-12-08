@@ -137,7 +137,7 @@ class ParameterServer(object):
             'push_time': self.push_time_history,
             'train_loss': self.train_loss_history, 'train_acc': self.train_acc_history,
             'test_loss': self.test_loss_history, 'test_acc': self.test_acc_history}
-        fname = f'{num_GPU}GPU_{extra_time_ratio}extra_{num_small}small_{small_BS}SBatch_{base_BS}LBatch'
+        fname = f'ASP_{num_GPU}GPU_{extra_time_ratio}extra_{num_small}small_{small_BS}batchSize'
         # load: npy = np.load('filename.npy', allow_pickle=True)
         # read: npy.item()['xxx']
         np.save(f'DBSL_npy/{fname}.npy', content)

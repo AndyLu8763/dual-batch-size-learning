@@ -56,8 +56,6 @@ momentum = 0.9
 decay = 0
 workers = 2
 eval_batch_size = 1000
-# let large_BS update factor be 1, then small_BS update factor be small_data / base_data
-total_factor = small_data / base_data * num_small + num_large
 # max training times reserve for each worker
 record = int(2*rounds)
 # set to use GPU
@@ -93,6 +91,8 @@ class ParameterServer(object):
         # BSP controller
         ## counter to let GPU synchronize
         self.BSP_counter = 0
+        ## collect the update factors
+        self.total_factor = 0
         ## new global model weights
         self.new_weights = self.model.get_weights()
     
@@ -129,12 +129,15 @@ class ParameterServer(object):
                 self.new_weights[i] += update_factor * worker_weights[i]
             # ++counter
             self.BSP_counter += 1
+            # accumulate total_factor
+            self.total_factor += update_factor
             # check whether the new round is end
             if self.BSP_counter == num_GPU:
                 for i in range(len(self.new_weights)):
-                    self.new_weights[i] /= total_factor
+                    self.new_weights[i] /= self.total_factor
                 self.model.set_weights(self.new_weights)
                 self.BSP_counter = 0
+                self.total_factor = 0
         # waiting other workers
         while self.BSP_counter != 0:
             pass
@@ -156,7 +159,7 @@ class ParameterServer(object):
             'push_time': self.push_time_history,
             'train_loss': self.train_loss_history, 'train_acc': self.train_acc_history,
             'test_loss': self.test_loss_history, 'test_acc': self.test_acc_history}
-        fname = f'{num_GPU}GPU_{extra_time_ratio}extra_{num_small}small_{small_BS}SBatch_{base_BS}LBatch'
+        fname = f'BSP_{num_GPU}GPU_{extra_time_ratio}extra_{num_small}small_{small_BS}batchSize'
         # load: npy = np.load('filename.npy', allow_pickle=True)
         # read: npy.item()['xxx']
         np.save(f'DBSL_npy/{fname}.npy', content)
