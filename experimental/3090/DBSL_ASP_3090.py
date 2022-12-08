@@ -1,5 +1,5 @@
 # Be sure that you have the directories: DBSL_npy DBSL_model
-# clear; python experimental/DBSL_ASP_3090.py -a='140.109.23.110' -r= &
+# clear; python experimental/3090/DBSL_ASP_3090.py -a='140.109.23.110' -r= &
 # server: gpu14
 # worker: gpu06, gpu07, gpu08, gpu09, gpu10, gpu14
 # For CIFAR-10/100, ResNet-18, RTX-3090

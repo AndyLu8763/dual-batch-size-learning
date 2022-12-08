@@ -1,5 +1,5 @@
 # Be sure that you have the directories: DBSL_npy DBSL_model
-# clear; python experimental/DBSL_BSP_1080.py -a='140.109.23.144' -r= &
+# clear; python experimental/1080/DBSL_BSP_1080.py -a='140.109.23.144' -r= &
 # server: gpu01
 # worker: gpu01, gpu02, gpu03, gpu04, gpu05
 # For CIFAR-10/100, ResNet-18, GTX-1080
