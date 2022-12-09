@@ -1,5 +1,5 @@
 # Be sure that you have the directories: DBSL_npy DBSL_model
-# clear; python experimental/DBSL_SSP.py -a='140.109.23.110' -r= &
+# clear; python experimental/DBSL_SSP_3090.py -a='140.109.23.110' -r= &
 # server: gpu14
 # worker: gpu06, gpu07, gpu08, gpu09, gpu10, gpu14
 # For CIFAR-10/100, ResNet-18, RTX-3090
@@ -18,11 +18,11 @@ import tf_cifar_resnet
 
 #### hyperparameter ####
 # GPU setting
-num_GPU = 3
+num_GPU = 6
 num_small = 0
 num_large = num_GPU - num_small
 # SSP threshold
-SSP_threshold = 3
+SSP_threshold = 1
 # scheduler
 rounds = 140
 threshold = [80, 120]

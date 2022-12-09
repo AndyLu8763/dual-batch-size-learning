@@ -1,8 +1,8 @@
 # Be sure that you have the directories: DBSL_npy DBSL_model
-# clear; python experimental/DBSL_SSP.py -a='140.109.23.110' -r= &
-# server: gpu14
-# worker: gpu06, gpu07, gpu08, gpu09, gpu10, gpu14
-# For CIFAR-10/100, ResNet-18, RTX-3090
+# clear; python experimental/1080/DBSL_SSP_1080.py -a='140.109.23.144' -r= &
+# server: gpu01
+# worker: gpu01, gpu02, gpu03, gpu04, gpu05
+# For CIFAR-10/100, ResNet-18, GTX-1080
 import argparse
 import os
 import threading
@@ -18,24 +18,24 @@ import tf_cifar_resnet
 
 #### hyperparameter ####
 # GPU setting
-num_GPU = 3
+num_GPU = 5
 num_small = 0
 num_large = num_GPU - num_small
 # SSP threshold
-SSP_threshold = 3
+SSP_threshold = 1
 # scheduler
 rounds = 140
 threshold = [80, 120]
 gamma = 0.2
 # batch size and learning rate and extra time rate
-base_BS = 1000
+base_BS = 500
 base_LR = 1e-1
 extra_time_ratio = 1.05
 # get small_BS, base_data, small_data
 ## should modify num_small && extra_time_ratio
 def count_small_BS_data_size():
     # ax+b
-    a, b = 0.00022595, 0.006233854698278141
+    a, b = 0.00056514, 0.015418572941770431
     num_train_data = 50000
     # t = (a+b/x1)*d1 = (a+b/x2)*d2
     time_base = (a + b/base_BS) * num_train_data / num_GPU
