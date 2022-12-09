@@ -136,6 +136,7 @@ class ParameterServer(object):
                 for i in range(len(self.new_weights)):
                     self.new_weights[i] /= self.total_factor
                 self.model.set_weights(self.new_weights)
+                # BSP reset
                 self.BSP_counter = 0
                 self.total_factor = 0
         # waiting other workers

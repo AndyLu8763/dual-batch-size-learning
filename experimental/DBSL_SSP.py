@@ -124,7 +124,7 @@ class ParameterServer(object):
         self = ps_rref.local_value()
         self.push_time_history[worker_rank, epoch] = time.time()
         self.push_counter[worker_rank] += 1
-        if (max(self.push_counter[1:]) - min(self.push_counter[1:]) > SSP_threshold):
+        if (self.SSP_sync == False and max(self.push_counter[1:]) - min(self.push_counter[1:]) > SSP_threshold):
             self.SSP_sync = True
 
         if self.SSP_sync:
@@ -148,6 +148,7 @@ class ParameterServer(object):
                     for i in range(len(self.new_weights)):
                         self.new_weights[i] /= self.total_factor
                     self.model.set_weights(self.new_weights)
+                    # BSP reset
                     self.BSP_counter = 0
                     self.total_factor = 0
                     # SSP reset
