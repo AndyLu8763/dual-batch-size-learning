@@ -25,6 +25,8 @@ num_large = num_GPU - num_small
 rounds = 140
 threshold = [80, 120]
 gamma = 0.2
+# random seed
+rand_seed = 8763
 # batch size and learning rate and extra time rate
 base_BS = 1000
 base_LR = 1e-1
@@ -160,6 +162,7 @@ class Worker(object):
         self.model = tf_cifar_resnet.make_resnet18(num_classes=100)
 
     def shuffle_data(self, x, y):
+        np.random.seed(rand_seed)
         index = np.random.permutation(y.shape[0])
         x = tf.gather(x, index)
         y = tf.gather(y, index)
@@ -200,10 +203,14 @@ class Worker(object):
             data_size = base_data if batch_size==base_BS else small_data
             # train
             print(f'Epoch {epoch} Train Stage')
+            data_start_index = (
+                small_data * (self.rank - 1)
+                if self.rank <= num_small
+                else small_data * num_small + base_data * (self.rank - num_small - 1))
             train_logs = self.model.fit(
                 datagen.flow(
-                    self.x_train[:data_size],
-                    self.y_train[:data_size],
+                    self.x_train[data_start_index:data_start_index+data_size],
+                    self.y_train[data_start_index:data_start_index+data_size],
                     batch_size=batch_size),
                 epochs=1,
                 verbose=0,
