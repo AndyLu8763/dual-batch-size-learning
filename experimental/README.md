@@ -12,25 +12,25 @@ K. -W. Lu, P. Liu, D. -Y. Hong and J. -J. Wu, "Efficient Dual Batch Size Deep Le
 
 ## Dataset and Model
 - The CIFAR-100 dataset
-  - A. Krizhevsky, G. Hinton, et al. [Learning multiple layers of features from tiny images](https://www.cs.toronto.edu/~kriz/learning-features-2009-TR.pdf). Citeseer, 2009.
+    - A. Krizhevsky, G. Hinton, et al. [Learning multiple layers of features from tiny images](https://www.cs.toronto.edu/~kriz/learning-features-2009-TR.pdf). Citeseer, 2009.
 - The ResNet-18 model
-  - K. He, X. Zhang, S. Ren, and J. Sun. [Deep residual learning for image recognition](https://doi.org/10.48550/arXiv.1512.03385). In Proceedings of the IEEE conference on computer vision and pattern recognition, pages 770–778, 2016.
+    - K. He, X. Zhang, S. Ren, and J. Sun. [Deep residual learning for image recognition](https://doi.org/10.48550/arXiv.1512.03385). In Proceedings of the IEEE conference on computer vision and pattern recognition, pages 770–778, 2016.
 
 ## Installation
 1. Upgrade CUDA at https://developer.nvidia.com/cuda-downloads.
 2. Create a new virtual environment. Recommend using `conda` to control it.
-  ```
-  conda create -n dbsl
-  ```
+    ```
+    conda create -n dbsl
+    ```
 3. Activate the virtual environment.
-  ```
-  conda activate dbsl
-  ```
+    ```
+    conda activate dbsl
+    ```
 4. Install conda packages.
-  ```
-  conda install -c pytorch -c nvidia -c conda-forge python matplotlib notebook scikit-learn pytorch torchvision tensorflow
-  ```
-  You could also appoint the package's version, e.g., `python=3.11`.
+    ```
+    conda install -c pytorch -c nvidia -c conda-forge python matplotlib notebook scikit-learn pytorch torchvision tensorflow
+    ```
+    You could also appoint the package's version, e.g., `python=3.11`.
 
 ## Create Folders
 `mkdir DBSL_npy DBSL_model`
