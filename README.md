@@ -1,4 +1,4 @@
-# Dual Batch Size Learning
+# Efficient Dual Batch Size Deep Learning for Distributed Parameter Server Systems
 
 ## Environment
 - python 3.9

@@ -1,4 +1,4 @@
-# Efficient Dual Batch Size Deep Learning
+# Experimental of Efficient Dual Batch Size Deep Learning for Distributed Parameter Server Systems
 <!--
 K. -W. Lu, P. Liu, D. -Y. Hong and J. -J. Wu, "Efficient Dual Batch Size Deep Learning for Distributed Parameter Server Systems," 2022 IEEE 46th Annual Computers, Software, and Applications Conference (COMPSAC), 2022, pp. 630-639, doi: [10.1109/COMPSAC54236.2022.00110](https://doi.org/10.1109/COMPSAC54236.2022.00110).
 -->
