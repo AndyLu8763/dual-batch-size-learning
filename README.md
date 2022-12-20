@@ -14,18 +14,20 @@
   ```
 2. Install packages:
   1. vim `~/.condarc` (Optional)
-    ```
-    channels:
-      - pytorch
-      - nvidia
-      - conda-forge
-      - defaults
-    ```
+  ```
+  channels:
+    - pytorch
+    - nvidia
+    - conda-forge
+    - defaults
+  ```
+
   2. install all packages
-    ```
-    conda install matplotlib notebook scikit-learn python=3.9 cudatoolkit=11.3 pytorch=1.10 torchvision=0.11 tensorflow=2.6 \
-    -n $(env_name) -c pytorch -c nvidia -c conda-forge
-    ```
+  ```
+  conda install matplotlib notebook scikit-learn python=3.9 \
+  cudatoolkit=11.3 pytorch=1.10 torchvision=0.11 tensorflow=2.6 \
+  -n $(env_name) -c pytorch -c conda-forge
+  ```
 
 ## DBSL
 Run `DBSL.py` by:
