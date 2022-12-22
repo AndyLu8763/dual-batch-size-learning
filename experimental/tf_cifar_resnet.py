@@ -1,6 +1,6 @@
 import numpy as np
-import tensorflow.keras as keras
-import tensorflow.keras.layers as layers
+from tensorflow import keras
+from tensorflow.keras import layers
 
 
 def load_cifar10():
