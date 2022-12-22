@@ -1,7 +1,7 @@
 # Be sure that you have the directories: DBSL_npy DBSL_model
-# clear; python experimental/DBSL_development.py -a='140.109.23.110' -s='' -r= &
+# clear; python experimental/DBSL_3_in_1.py -a='140.109.23.110' -s='' -r= &
 # server: gpu14
-# worker: gpu06, gpu07, gpu08, gpu09, gpu10, gpu14
+# worker: gpu06, gpu07, gpu08
 # For CIFAR-10/100, ResNet-18, RTX-3090
 import argparse
 import os
