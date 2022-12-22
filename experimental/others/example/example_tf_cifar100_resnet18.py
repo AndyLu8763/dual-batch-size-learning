@@ -5,18 +5,32 @@
 
 
 import tensorflow as tf
-import tensorflow.keras as keras
+from tensorflow import keras
 from tensorflow.keras import layers
-#import torch
+from tensorflow.keras import mixed_precision
 
 
 # In[ ]:
 
 
 physical_devices = tf.config.list_physical_devices('GPU')
-tf.config.set_visible_devices(physical_devices[0], 'GPU')
-tf.config.experimental.set_memory_growth(physical_devices[0], True)
-print(f'Using device: {physical_devices[0]}')
+print(f'Numbers of Physical Devices: {len(physical_devices)}')
+gpu_index = 0
+tf.config.set_visible_devices(physical_devices[gpu_index], 'GPU')
+tf.config.experimental.set_memory_growth(physical_devices[gpu_index], True)
+print(f'Using device: {physical_devices[gpu_index]}')
+
+
+# In[ ]:
+
+
+# only TPUs support 'mix_bfloat16'
+# if using NVIDIA GPUs, choose 'mixed_float16'
+policy = mixed_precision.Policy('mixed_float16')
+mixed_precision.set_global_policy(policy)
+print(f'Policy: {policy.name}')
+print(f'Compute dtype: {policy.compute_dtype}')
+print(f'Variable dtype: {policy.variable_dtype}')
 
 
 # In[ ]:
