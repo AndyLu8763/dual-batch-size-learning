@@ -223,7 +223,12 @@ for batch_size in range(start_batch_size, stop_batch_size+1, step):
 # In[ ]:
 
 
-np.save(f'record_time_keras_preprocessing_{start_batch_size}_{stop_batch_size}.npy', np.array(ls))
+np.save(
+    'record_time_keras_preprocessing_'
+    f'{1 if MIXED_PRECISION_FLAG else 0}{1 if JIT_COMPILE_FLAG else 0}_'
+    f'{start_batch_size}_{stop_batch_size}.npy',
+    np.array(ls)
+)
 
 
 # In[ ]:
