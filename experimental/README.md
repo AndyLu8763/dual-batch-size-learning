@@ -4,11 +4,11 @@ K. -W. Lu, P. Liu, D. -Y. Hong and J. -J. Wu, "Efficient Dual Batch Size Deep Le
 -->
 
 ## Environment (Recommendation)
-- python 3.9
-- cudatoolkit 11.3
-- pytorch 1.10
-- torchvision 0.11
-- tensorflow 2.6
+- python 3.10
+- pytorch 2.0
+- torchvision 0.15
+- pytorch-cuda 11.8
+- tensorflow 2.11
 
 ## Dataset and Model
 - The CIFAR-100 dataset
@@ -26,11 +26,15 @@ K. -W. Lu, P. Liu, D. -Y. Hong and J. -J. Wu, "Efficient Dual Batch Size Deep Le
     ```
     conda activate dbsl
     ```
-4. Install conda packages.
+4. Install **essential** conda packages.
     ```
-    conda install -c pytorch -c nvidia -c conda-forge python matplotlib notebook scikit-learn pytorch torchvision tensorflow
+    conda update --all -c pytorch -c nvidia -c conda-forge python scikit-learn pytorch torchvision tensorflow
     ```
-    You could also appoint the package's version, e.g., `python=3.11`.
+    - You could also appoint the package's version, e.g., `python=3.11`.
+5. Install **optional** conda packages.
+    ```
+    conda update --all -c pytorch -c nvidia -c conda-forge matplotlib notebook pandas
+    ```
 
 ## Create Folders
 `mkdir DBSL_npy DBSL_model`
