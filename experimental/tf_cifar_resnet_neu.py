@@ -1,74 +1,78 @@
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers
+
 
 def load_cifar100(
     batch_size: int,
+    validation_batch_size: int = batch_size,
     seed: int = None,
     num_parallel_calls: int = tf.data.AUTOTUNE):
     
-    def map_func(image, label, TRAIN_FLAG):
+    def map_preprocessing(image):
         mean = [0.50705886, 0.48666665, 0.4407843 ]
         variance = [0.07153001, 0.06577717, 0.0762193 ]
         transform = keras.Sequential([
-            layers.Rescaling(1/255),
-            layers.Normalization(mean=mean, variance=variance)
+            keras.layers.Rescaling(1/255),
+            keras.layers.Normalization(mean=mean, variance=variance)
         ])
-        if TRAIN_FLAG:
-            transform = keras.Sequential([
-                transform,
-                layers.RandomTranslation(height_factor=0.1, width_factor=0.1, fill_mode='constant'),
-                layers.RandomFlip('horizontal')
-            ])
-        return transform(image), label
+        return transform(image)
     
-    def dataloader(image, label, TRAIN_FLAG, batch_size, seed, num_parallel_calls):
-        return (
-            tf.data.Dataset.from_tensor_slices((image, label))
-            .cache()
-            .shuffle(buffer_size=len(label), seed=seed)
-            .map(lambda x, y: (map_func(x, y, TRAIN_FLAG)), num_parallel_calls=num_parallel_calls)
-            .batch(batch_size=batch_size)
-            .prefetch(buffer_size=tf.data.AUTOTUNE)
-        )
+    def map_augmentation(image):
+        transform = keras.Sequential([
+            keras.layers.RandomTranslation(height_factor=0.1, width_factor=0.1, fill_mode='constant'),
+            keras.layers.RandomFlip('horizontal')
+        ])
+        return transform(image)
     
     (x_train, y_train), (x_test, y_test) = keras.datasets.cifar100.load_data()
-    train_dataset = dataloader(x_train, y_train, True, batch_size, seed, num_parallel_calls)
-    test_dataset = dataloader(x_test, y_test, False, batch_size, seed, num_parallel_calls)
-    return train_dataset, test_dataset
+    dataloader = {
+        'train': (tf.data.Dataset.from_tensor_slices((x_train, y_train))
+                  .map(lambda x, y: (map_preprocessing(x), y), num_parallel_calls=tf.data.AUTOTUNE)
+                  .cache()
+                  .shuffle(buffer_size=len(x_train), seed=seed)
+                  .map(lambda x, y: (map_augmentation(x), y), num_parallel_calls=tf.data.AUTOTUNE)
+                  .batch(batch_size=batch_size)
+                  .prefetch(buffer_size=tf.data.AUTOTUNE)),
+        'test': (tf.data.Dataset.from_tensor_slices((x_test, y_test))
+                 .map(lambda x, y: (map_preprocessing(x), y), num_parallel_calls=tf.data.AUTOTUNE)
+                 .cache()
+                 .batch(batch_size=validation_batch_size)
+                 .prefetch(buffer_size=tf.data.AUTOTUNE))
+    }
+    return dataloader
 
-def make_resnet18(inputs: keras.Input = keras.Input(shape=(32, 32, 3)),
-                  num_classes: int = 100
-                 ) -> keras.Model:
+
+def make_resnet18(
+    inputs: keras.Input = keras.Input(shape=(32, 32, 3)),
+    num_classes: int = 100) -> keras.Model:
+    
     def basicblock(inputs: keras.Input, filters: int, bottleneck: bool):
         if bottleneck:
-            identity = layers.Conv2D(filters, 1, strides=2, padding='valid',
-                                     kernel_initializer='he_normal'
-                                    )(inputs)
-            identity = layers.BatchNormalization()(identity)
-            x = layers.Conv2D(filters, 3, strides=2, padding='same',
-                              kernel_initializer='he_normal'
-                             )(inputs)
+            identity = keras.layers.Conv2D(
+                filters, 1, strides=2, padding='valid', kernel_initializer='he_normal'
+            )(inputs)
+            identity = keras.layers.BatchNormalization()(identity)
+            x = keras.layers.Conv2D(
+                filters, 3, strides=2, padding='same', kernel_initializer='he_normal'
+            )(inputs)
         else:
             identity = inputs
-            x = layers.Conv2D(filters, 3, strides=1, padding='same',
-                              kernel_initializer='he_normal',
-                             )(inputs)
-        x = layers.BatchNormalization()(x)
-        x = layers.Activation('relu')(x)
-        x = layers.Conv2D(filters, 3, strides=1, padding='same',
-                          kernel_initializer='he_normal',
-                         )(x)
-        x = layers.BatchNormalization()(x)
-        x = layers.Add()([x, identity])
-        x = layers.Activation('relu')(x)
+            x = keras.layers.Conv2D(
+                filters, 3, strides=1, padding='same', kernel_initializer='he_normal'
+            )(inputs)
+        x = keras.layers.BatchNormalization()(x)
+        x = keras.layers.Activation('relu')(x)
+        x = keras.layers.Conv2D(
+            filters, 3, strides=1, padding='same', kernel_initializer='he_normal'
+        )(x)
+        x = keras.layers.BatchNormalization()(x)
+        x = keras.layers.Add()([x, identity])
+        x = keras.layers.Activation('relu')(x)
         return x
     
-    x = layers.Conv2D(64, 3, strides=1, padding='same',
-                      kernel_initializer='he_normal',
-                     )(inputs)
-    x = layers.BatchNormalization()(x)
-    x = layers.Activation('relu')(x)
+    x = keras.layers.Conv2D(64, 3, strides=1, padding='same', kernel_initializer='he_normal')(inputs)
+    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.Activation('relu')(x)
     x = basicblock(x, 64, False)
     x = basicblock(x, 64, False)
     x = basicblock(x, 128, True)
@@ -77,6 +81,6 @@ def make_resnet18(inputs: keras.Input = keras.Input(shape=(32, 32, 3)),
     x = basicblock(x, 256, False)
     x = basicblock(x, 512, True)
     x = basicblock(x, 512, False)
-    x = layers.GlobalAveragePooling2D()(x)
-    outputs = layers.Dense(num_classes, activation='softmax')(x)
+    x = keras.layers.GlobalAveragePooling2D()(x)
+    outputs = keras.layers.Dense(num_classes, activation='softmax')(x)
     return keras.Model(inputs=inputs, outputs=outputs)
