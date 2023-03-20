@@ -27,14 +27,14 @@ def load_cifar100(
     (x_train, y_train), (x_test, y_test) = keras.datasets.cifar100.load_data()
     dataloader = {
         'train': (tf.data.Dataset.from_tensor_slices((x_train, y_train))
-                  .map(lambda x, y: (map_preprocessing(x), y), num_parallel_calls=tf.data.AUTOTUNE)
+                  .map(lambda x, y: (map_preprocessing(x), y), num_parallel_calls=num_parallel_calls)
                   .cache()
                   .shuffle(buffer_size=len(x_train), seed=seed)
-                  .map(lambda x, y: (map_augmentation(x), y), num_parallel_calls=tf.data.AUTOTUNE)
+                  .map(lambda x, y: (map_augmentation(x), y), num_parallel_calls=num_parallel_calls)
                   .batch(batch_size=batch_size)
                   .prefetch(buffer_size=tf.data.AUTOTUNE)),
         'test': (tf.data.Dataset.from_tensor_slices((x_test, y_test))
-                 .map(lambda x, y: (map_preprocessing(x), y), num_parallel_calls=tf.data.AUTOTUNE)
+                 .map(lambda x, y: (map_preprocessing(x), y), num_parallel_calls=num_parallel_calls)
                  .cache()
                  .batch(batch_size=validation_batch_size)
                  .prefetch(buffer_size=tf.data.AUTOTUNE))
