@@ -1,3 +1,4 @@
+# error, should be modify, see pt version, redo forward path
 import tensorflow as tf
 from tensorflow import keras
 
@@ -6,8 +7,8 @@ def load_cifar100(
     batch_size: int,
     validation_batch_size: int = batch_size,
     seed: int = None,
-    num_parallel_calls: int = tf.data.AUTOTUNE):
-    
+    num_parallel_calls: int = tf.data.AUTOTUNE
+):
     def map_preprocessing(image):
         mean = [0.50705886, 0.48666665, 0.4407843 ]
         variance = [0.07153001, 0.06577717, 0.0762193 ]
@@ -44,8 +45,8 @@ def load_cifar100(
 
 def make_resnet18(
     inputs: keras.Input = keras.Input(shape=(32, 32, 3)),
-    num_classes: int = 100) -> keras.Model:
-    
+    num_classes: int = 100
+) -> keras.Model:
     def basicblock(inputs: keras.Input, filters: int, bottleneck: bool):
         if bottleneck:
             identity = keras.layers.Conv2D(
