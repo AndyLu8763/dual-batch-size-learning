@@ -1,11 +1,10 @@
-# error, should be modify, see pt version, redo forward path
 import tensorflow as tf
 from tensorflow import keras
 
 
 def load_cifar100(
     batch_size: int,
-    validation_batch_size: int = batch_size,
+    validation_batch_size: int,
     seed: int = None,
     num_parallel_calls: int = tf.data.AUTOTUNE
 ):
@@ -45,43 +44,39 @@ def load_cifar100(
 
 def make_resnet18(
     inputs: keras.Input = keras.Input(shape=(32, 32, 3)),
-    num_classes: int = 100
+    classes: int = 100
 ) -> keras.Model:
-    def basicblock(inputs: keras.Input, filters: int, bottleneck: bool):
-        if bottleneck:
-            identity = keras.layers.Conv2D(
-                filters, 1, strides=2, padding='valid', kernel_initializer='he_normal'
-            )(inputs)
-            identity = keras.layers.BatchNormalization()(identity)
-            x = keras.layers.Conv2D(
-                filters, 3, strides=2, padding='same', kernel_initializer='he_normal'
-            )(inputs)
+    def basicblock(x: keras.Input, filters: int, conv_shortcut: bool = False):
+        if conv_shortcut:
+            shortcut = keras.layers.Conv2D(filters, 1, strides=2)(x)
+            shortcut = keras.layers.BatchNormalization(epsilon=1.001e-5)(shortcut)
+            x = keras.layers.Conv2D(filters, 3, strides=2, padding='same')(x)
         else:
-            identity = inputs
-            x = keras.layers.Conv2D(
-                filters, 3, strides=1, padding='same', kernel_initializer='he_normal'
-            )(inputs)
-        x = keras.layers.BatchNormalization()(x)
+            shortcut = x
+            x = keras.layers.Conv2D(filters, 3, padding='same')(x)
+        x = keras.layers.BatchNormalization(epsilon=1.001e-5)(x)
         x = keras.layers.Activation('relu')(x)
-        x = keras.layers.Conv2D(
-            filters, 3, strides=1, padding='same', kernel_initializer='he_normal'
-        )(x)
-        x = keras.layers.BatchNormalization()(x)
-        x = keras.layers.Add()([x, identity])
+        x = keras.layers.Conv2D(filters, 3, padding='same')(x)
+        x = keras.layers.BatchNormalization(epsilon=1.001e-5)(x)
+        x = keras.layers.Add()([shortcut, x])
         x = keras.layers.Activation('relu')(x)
         return x
     
-    x = keras.layers.Conv2D(64, 3, strides=1, padding='same', kernel_initializer='he_normal')(inputs)
-    x = keras.layers.BatchNormalization()(x)
+    filters = 16
+    x = keras.layers.Conv2D(filters, 3, padding='same')(inputs)
+    x = keras.layers.BatchNormalization(epsilon=1.001e-5)(x)
     x = keras.layers.Activation('relu')(x)
-    x = basicblock(x, 64, False)
-    x = basicblock(x, 64, False)
-    x = basicblock(x, 128, True)
-    x = basicblock(x, 128, False)
-    x = basicblock(x, 256, True)
-    x = basicblock(x, 256, False)
-    x = basicblock(x, 512, True)
-    x = basicblock(x, 512, False)
+    x = basicblock(x, filters)
+    x = basicblock(x, filters)
+    x = basicblock(x, filters)
+    filters *= 2
+    x = basicblock(x, filters, True)
+    x = basicblock(x, filters)
+    x = basicblock(x, filters)
+    filters *= 2
+    x = basicblock(x, filters, True)
+    x = basicblock(x, filters)
+    x = basicblock(x, filters)
     x = keras.layers.GlobalAveragePooling2D()(x)
-    outputs = keras.layers.Dense(num_classes, activation='softmax')(x)
+    outputs = keras.layers.Dense(classes, activation='softmax')(x)
     return keras.Model(inputs=inputs, outputs=outputs)
