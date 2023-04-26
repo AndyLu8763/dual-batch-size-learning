@@ -36,8 +36,8 @@ def load_cifar100():
 def make_resnet18(inputs: keras.Input = keras.Input(shape=(32, 32, 3)),
                   num_classes: int = 100
                  ) -> keras.Model:
-    def basicblock(inputs: keras.Input, filters: int, bottleneck: bool):
-        if bottleneck:
+    def basicblock(inputs: keras.Input, filters: int, downsample: bool):
+        if downsample:
             identity = layers.Conv2D(filters, 1, strides=2, padding='valid',
                                      kernel_initializer='he_normal'
                                     )(inputs)
