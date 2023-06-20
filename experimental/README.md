@@ -3,20 +3,49 @@
 K. -W. Lu, P. Liu, D. -Y. Hong and J. -J. Wu, "Efficient Dual Batch Size Deep Learning for Distributed Parameter Server Systems," 2022 IEEE 46th Annual Computers, Software, and Applications Conference (COMPSAC), 2022, pp. 630-639, doi: [10.1109/COMPSAC54236.2022.00110](https://doi.org/10.1109/COMPSAC54236.2022.00110).
 -->
 
-## Environment (Recommendation)
-- python 3.10
-- pytorch 2.0
-- torchvision 0.15
-- pytorch-cuda 11.8
-- tensorflow 2.11
-
 ## Dataset and Model
 - The CIFAR-100 dataset
     - A. Krizhevsky, G. Hinton, et al. [Learning multiple layers of features from tiny images](https://www.cs.toronto.edu/~kriz/learning-features-2009-TR.pdf). Citeseer, 2009.
 - The ResNet-18 model
     - K. He, X. Zhang, S. Ren, and J. Sun. [Deep residual learning for image recognition](https://doi.org/10.48550/arXiv.1512.03385). In Proceedings of the IEEE conference on computer vision and pattern recognition, pages 770–778, 2016.
 
-## Installation
+## Create Folders
+`mkdir DBSL_npy DBSL_model`
+If you do not do this, the results can not be saved.
+
+## Environment (experimental)
+- python 3.11
+- pytorch 2.0
+- torchvision 0.15
+- pytorch-cuda 11.8
+- tensorflow 2.12
+- cudatoolkit 11.8
+- cudnn 8.8
+
+## Installation (experimental)
+### method 1, mix conda and pypi, nice
+```
+conda update --all -c conda-forge 
+conda update --all -c pytorch -c conda-forge -c nvidia python=3.11 notebook matplotlib scikit-learn pytorch torchvision pytorch-cuda cudatoolkit
+pip install -U tensorflow keras-cv nvidia-cudnn-cu11
+mkdir -p $CONDA_PREFIX/etc/conda/activate.d
+echo 'CUDNN_PATH=$(dirname $(python -c "import nvidia.cudnn;print(nvidia.cudnn.__file__)"))' >> $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
+echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/:$CUDNN_PATH/lib' >> $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
+source $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
+```
+### method 2, only conda, failed
+```
+conda update --all -c pytorch -c conda-forge -c nvidia python=3.11 notebook matplotlib scikit-learn pytorch torchvision pytorch-cuda tensorflow=*=gpu* keras-cv cudatoolkit cudnn
+```
+
+## Environment (deprecated)
+- python 3.10
+- pytorch 2.0
+- torchvision 0.15
+- pytorch-cuda 11.8
+- tensorflow 2.11
+
+## Installation (deprecated)
 1. Upgrade CUDA at https://developer.nvidia.com/cuda-downloads.
 2. Create a new virtual environment. Recommend using `conda` to control it.
     ```
@@ -35,10 +64,6 @@ K. -W. Lu, P. Liu, D. -Y. Hong and J. -J. Wu, "Efficient Dual Batch Size Deep Le
     ```
     conda update --all -c pytorch -c nvidia -c conda-forge matplotlib notebook pandas
     ```
-
-## Create Folders
-`mkdir DBSL_npy DBSL_model`
-If you do not do this, the results can not be saved.
 
 <!--
 ## DBSL
