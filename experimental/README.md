@@ -4,11 +4,10 @@ K. -W. Lu, P. Liu, D. -Y. Hong and J. -J. Wu, "Efficient Dual Batch Size Deep Le
 -->
 
 ## Dataset and Model
-- The CIFAR-100 dataset
-    - A. Krizhevsky, G. Hinton, et al. [Learning multiple layers of features from tiny images](https://www.cs.toronto.edu/~kriz/learning-features-2009-TR.pdf). Citeseer, 2009.
-- The ResNet-18 model
-    - K. He, X. Zhang, S. Ren, and J. Sun. [Deep residual learning for image recognition](https://doi.org/10.48550/arXiv.1512.03385). In Proceedings of the IEEE conference on computer vision and pattern recognition, pages 770–778, 2016.
-
+- The CIFAR dataset
+    - A. Krizhevsky, G. Hinton, et al., [“Learning multiple layers of features from tiny images,”](https://www.cs.toronto.edu/~kriz/) Citeseer, 2009.
+- The ResNet model
+    - K. He, X. Zhang, S. Ren, and J. Sun, [“Deep residual learning for image recognition,”](https://doi.org/10.1109/CVPR.2016.90) in Proceedings of the IEEE conference on computer vision and pattern recognition, pp. 770–778, 2016.
 ## Create Folders
 `mkdir DBSL_npy DBSL_model`
 If you do not do this, the results can not be saved.
@@ -19,21 +18,34 @@ If you do not do this, the results can not be saved.
 - torchvision 0.15
 - pytorch-cuda 11.8
 - tensorflow 2.12
+- keras-cv 0.5
 - cudatoolkit 11.8
-- cudnn 8.8
+- nvidia-cudnn-cu11 8.9
 
 ## Installation (experimental)
-### method 1, mix conda and pypi, nice
-```
-conda update --all -c conda-forge 
-conda update --all -c pytorch -c conda-forge -c nvidia python=3.11 notebook matplotlib scikit-learn pytorch torchvision pytorch-cuda cudatoolkit
-pip install -U tensorflow keras-cv nvidia-cudnn-cu11
-mkdir -p $CONDA_PREFIX/etc/conda/activate.d
-echo 'CUDNN_PATH=$(dirname $(python -c "import nvidia.cudnn;print(nvidia.cudnn.__file__)"))' >> $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
-echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/:$CUDNN_PATH/lib' >> $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
-source $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
-```
+### method 1, mix conda and pypi, nice but hard to manage packages
+1. Menage conda environment:
+    - if analyzing results:
+        ```
+        conda update --all -c pytorch -c conda-forge -c nvidia python cudatoolkit notebook matplotlib scikit-learn pytorch torchvision pytorch-cuda
+        ```
+    - else:
+        ```
+        conda update --all -c pytorch -c conda-forge -c nvidia python cudatoolkit pytorch torchvision pytorch-cuda
+        ```
+2. Menage pypi packages, install TensorFlow:
+    ```
+    pip install -U tensorflow keras-cv nvidia-cudnn-cu11
+    ```
+3. Set the PATH environment variable:
+    ```
+    mkdir -p $CONDA_PREFIX/etc/conda/activate.d
+    echo 'CUDNN_PATH=$(dirname $(python -c "import nvidia.cudnn;print(nvidia.cudnn.__file__)"))' >> $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
+    echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/:$CUDNN_PATH/lib' >> $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
+    source $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
+    ```
 ### method 2, only conda, failed
+The conda package conflicts, resulting in an error.
 ```
 conda update --all -c pytorch -c conda-forge -c nvidia python=3.11 notebook matplotlib scikit-learn pytorch torchvision pytorch-cuda tensorflow=*=gpu* keras-cv cudatoolkit cudnn
 ```
