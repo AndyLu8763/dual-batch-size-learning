@@ -18,7 +18,8 @@ If you do not do this, the results can not be saved.
 - torchvision 0.15
 - pytorch-cuda 11.8
 - tensorflow 2.12
-- keras-cv 0.5
+- keras-core 0.1
+- keras-cv 0.6
 - cudatoolkit 11.8
 - nvidia-cudnn-cu11 8.9
 
@@ -34,10 +35,11 @@ If you do not do this, the results can not be saved.
         conda update --all -c pytorch -c conda-forge -c nvidia python cudatoolkit pytorch torchvision pytorch-cuda
         ```
 2. Menage pypi packages, install TensorFlow:
+    - tensorflow 2.13 has some problem, try to use 2.12 temporarily.
     ```
-    pip install -U tensorflow keras-cv nvidia-cudnn-cu11
+    pip install -U tensorflow==2.12 keras-cv keras-core nvidia-cudnn-cu11
     ```
-3. Set the PATH environment variable:
+3. ~~Set the PATH environment variable: (depricated)~~
     ```
     mkdir -p $CONDA_PREFIX/etc/conda/activate.d
     echo 'CUDNN_PATH=$(dirname $(python -c "import nvidia.cudnn;print(nvidia.cudnn.__file__)"))' >> $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
