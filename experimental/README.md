@@ -34,9 +34,14 @@ If you do not do this, the results can not be saved.
         pip install -U torch==1.10.2 torchvision==0.11.3 tensorflow==2.6.5
         ```
     - For running programs and analyzing data:
-        ```
-        pip install -U torch==1.10.2 torchvision==0.11.3 tensorflow==2.6.5 jupyterlab matplotlib scikit-learn
-        ```
+        - for `jupyterlab`
+            ```
+            pip install -U torch==1.10.2 torchvision==0.11.3 tensorflow==2.6.5 jupyterlab matplotlib scikit-learn imgaug
+            ```
+        - for `nbclassic`
+            ```
+            pip install -U torch==1.10.2 torchvision==0.11.3 tensorflow==2.6.5 nbclassic matplotlib scikit-learn imgaug
+            ```
 
 ### Jupyter Remote Setting
 - packages: `jupyterlab`, `notebook`, `nbclassic`
@@ -67,3 +72,6 @@ If you do not do this, the results can not be saved.
             - c.ServerApp.ip = '*'
             - c.ServerApp.password = u'argon2:xxx'
             - c.ServerApp.port = 8763
+
+### Others
+- For tensorflow new version, try to use `keras-cv` instead of `imgaug` for doing image augmentation.
