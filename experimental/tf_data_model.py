@@ -133,18 +133,25 @@ def load_imagenet(resolution: int, batch_size: int, dir_path: str):
 def build_resnet(
     dataset: str,
     depth: int,
-    resolution: int,
     dropout_rate: float,
+    resolution: int,
     TEST_KERNEL_REGULARIZERS=keras.regularizers.L2(weight_decay) if TEST else None
 ) -> keras.Model:
-    
     dataset_list = ['cifar10', 'cifar100', 'imagenet']
     depth_list = [18, 34]
+    cifar_resolution_list = [24, 32]
+    imagenet_resolution_list = [160, 224, 288]
     
     if dataset not in dataset_list:
         raise ValueError(f'Invalid dataset "{dataset}", it should be in {dataset_list}.')
     if depth not in depth_list:
         raise ValueError(f'Invalid depth "{depth}", it should be in {depth_list}.')
+    if 'cifar' in dataset:
+        if resolution not in cifar_resolution_list:
+            raise ValueError(f'Invalid resolution "{resolution}", it should be in {cifar_resolution_list}.')
+    if 'imagenet' in dataset:
+        if resolution not in imagenet_resolution_list:
+            raise ValueError(f'Invalid resolution "{resolution}", it should be in {imagenet_resolution_list}.')
     
     if dataset == 'cifar10':
         classes = 10
@@ -241,3 +248,18 @@ def build_resnet(
     )(x)
     
     return keras.Model(inputs=inputs, outputs=outputs)
+
+
+def modify_resnet(
+    old_model: keras.Model,
+    dataset: str,
+    depth: int,
+    dropout_rate: float,
+    resolution: int
+) -> keras.Model:
+    new_model = build_resnet(
+        dataset=dataset, depth=depth, dropout_rate=dropout_rate, resolution=resolution
+    )
+    new_model.set_weights(old_model.get_weights())
+    
+    return new_model
