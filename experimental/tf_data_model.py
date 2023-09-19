@@ -21,7 +21,7 @@ def load_cifar(resolution: int, batch_size: int, dataset: str):
         raise ValueError(f'Invalid resolution "{dataset}", it should be in {dataset_list}.')
     
     '''
-    # tf.keras.utils.image_dataset_from_directory() can not allow simple augmentation pipeline
+    # keras.utils.image_dataset_from_directory() can not allow simple augmentation pipeline
     # simple augmentation pipeline == keras.layers.RandomXXX()
     # move simple augmentation pipeline to build_model
     simple_aug = keras.Sequential([
@@ -81,7 +81,7 @@ def load_imagenet(resolution: int, batch_size: int, dir_path: str):
         raise ValueError(f'Invalid resolution "{resolution}", it should be in {resolution_list}.')
     
     '''
-    # tf.keras.utils.image_dataset_from_directory() can not allow simple augmentation pipeline
+    # keras.utils.image_dataset_from_directory() can not allow simple augmentation pipeline
     # simple augmentation pipeline == keras.layers.RandomXXX()
     # move simple augmentation pipeline to build_model
     simple_aug = keras.Sequential([
@@ -99,7 +99,7 @@ def load_imagenet(resolution: int, batch_size: int, dir_path: str):
     
     dataloader = {
         'train': (
-            tf.keras.utils.image_dataset_from_directory(
+            keras.utils.image_dataset_from_directory(
                 directory=f'{dir_path}/imagenet/train',
                 label_mode='int', # for keras.losses.SparseCategoricalCrossentropy()
                 batch_size=batch_size,
@@ -113,7 +113,7 @@ def load_imagenet(resolution: int, batch_size: int, dir_path: str):
             .prefetch(buffer_size=tf.data.AUTOTUNE)
         ),
         'val': (
-            tf.keras.utils.image_dataset_from_directory(
+            keras.utils.image_dataset_from_directory(
                 directory=f'{dir_path}/imagenet/val',
                 label_mode='int', # for keras.losses.SparseCategoricalCrossentropy()
                 batch_size=batch_size,
@@ -249,6 +249,24 @@ def build_resnet(
     )(x)
     
     return keras.Model(inputs=inputs, outputs=outputs)
+
+
+def load_data(
+    resolution: int,
+    batch_size: int,
+    dataset: str,
+    dir_path: Optional[str] = None
+):
+    dataset_list = ['cifar10', 'cifar100', 'imagenet']
+    
+    if 'cifar' in dataset:
+        return load_cifar(resolution=resolution, batch_size=batch_size, dataset=dataset)
+    elif dataset == 'imagenet':
+        if dir_path == None:
+            raise ValueError(f'Invalid directory path "{dir_path}".')
+        return load_imagenet(resolution=resolution, batch_size=batch_size, dir_path=dir_path)
+    else:
+        raise ValueError(f'Invalid dataset "{dataset}", it should be in {dataset_list}.')
 
 
 def modify_resnet(
