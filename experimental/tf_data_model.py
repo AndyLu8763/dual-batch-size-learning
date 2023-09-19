@@ -1,3 +1,4 @@
+from typing import Optional, Union
 import tensorflow as tf
 from tensorflow import keras
 
@@ -11,7 +12,7 @@ def load_cifar(resolution: int, batch_size: int, dataset: str):
     std = [0.299, 0.224, 0.225]
     var = [0.089401, 0.050176, 0.050625] # tf.math.square(std)
     
-    resolution_list = [24, 32]
+    resolution_list = [16, 24, 32]
     dataset_list = ['cifar10', 'cifar100']
     
     if resolution not in resolution_list:
@@ -139,7 +140,7 @@ def build_resnet(
 ) -> keras.Model:
     dataset_list = ['cifar10', 'cifar100', 'imagenet']
     depth_list = [18, 34]
-    cifar_resolution_list = [24, 32]
+    cifar_resolution_list = [16, 24, 32]
     imagenet_resolution_list = [160, 224, 288]
     
     if dataset not in dataset_list:
@@ -251,15 +252,21 @@ def build_resnet(
 
 
 def modify_resnet(
-    old_model: keras.Model,
+    old_model: Union[keras.Model, None],
     dataset: str,
     depth: int,
     dropout_rate: float,
     resolution: int
 ) -> keras.Model:
+    keras.backend.clear_session()
     new_model = build_resnet(
-        dataset=dataset, depth=depth, dropout_rate=dropout_rate, resolution=resolution
+        dataset=dataset,
+        depth=depth,
+        dropout_rate=dropout_rate,
+        resolution=resolution,
+        TEST_KERNEL_REGULARIZERS=keras.regularizers.L2(weight_decay) if TEST else None
     )
-    new_model.set_weights(old_model.get_weights())
+    if old_model:
+        new_model.set_weights(old_model.get_weights())
     
     return new_model
