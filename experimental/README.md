@@ -15,9 +15,9 @@ If you do not do this, the results can not be saved.
 
 ## Environment
 - python 3.9
-- pytorch 1.10.2
-- torchvision 0.11.3
-- tensorflow 2.6.5
+- pytorch 1.10.* (1.10.2)
+- torchvision 0.11.* (0.11.3)
+- tensorflow 2.6.* (2.6.5)
 
 ## Installation
 1. Create conda environment:
@@ -31,16 +31,16 @@ If you do not do this, the results can not be saved.
 3. Install pip packages:
     - For just running programs:
         ```
-        pip install -U torch==1.10.2 torchvision==0.11.3 tensorflow==2.6.5
+        pip install -U torch==1.10.* torchvision==0.11.* tensorflow==2.6.* imgaug
         ```
     - For running programs and analyzing data:
         - for `jupyterlab`
             ```
-            pip install -U torch==1.10.2 torchvision==0.11.3 tensorflow==2.6.5 jupyterlab matplotlib scikit-learn imgaug
+            pip install -U torch==1.10.* torchvision==0.11.* tensorflow==2.6.* jupyterlab matplotlib scikit-learn imgaug
             ```
         - for `nbclassic`
             ```
-            pip install -U torch==1.10.2 torchvision==0.11.3 tensorflow==2.6.5 nbclassic matplotlib scikit-learn imgaug
+            pip install -U torch==1.10.* torchvision==0.11.* tensorflow==2.6.* nbclassic matplotlib scikit-learn imgaug
             ```
 
 ### Jupyter Remote Setting
@@ -60,7 +60,7 @@ If you do not do this, the results can not be saved.
         - vim ~/.jupyter/jupyter_server_config.py
             - c.ServerApp.ip = '*'
             - c.ServerApp.open_browser = False
-            - - c.ServerApp.password = u'argon2:xxxx'
+            - c.ServerApp.password = u'argon2:xxxx'
             - c.ServerApp.port = 8763
     - for `nbclassic`:
         - `jupyter nbclassic`
@@ -75,3 +75,4 @@ If you do not do this, the results can not be saved.
 
 ### Others
 - For tensorflow new version, try to use `keras-cv` instead of `imgaug` for doing image augmentation.
+- for latest version, use `pip install -U torch torchvision tensorflow keras-cv`
