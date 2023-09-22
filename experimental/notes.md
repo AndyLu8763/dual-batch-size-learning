@@ -43,3 +43,9 @@
         - loss: 0.9030 - accuracy: 0.9740 - val_loss: 2.4487 - val_accuracy: 0.6259
     - cycle RES
         - loss: 0.8260 - accuracy: 0.9905 - val_loss: 2.1457 - val_accuracy: 0.6765
+#### imagenet
+- diff BS
+    - iter RES
+        - 
+    - cycle RES
+        - loss: 1.2527 - accuracy: 0.7801 - val_loss: 1.7567 - val_accuracy: 0.6752
