@@ -20,16 +20,6 @@ def load_cifar(resolution: int, batch_size: int, dataset: str):
     if dataset not in dataset_list:
         raise ValueError(f'Invalid resolution "{dataset}", it should be in {dataset_list}.')
     
-    '''
-    # keras.utils.image_dataset_from_directory() can not allow simple augmentation pipeline
-    # simple augmentation pipeline == keras.layers.RandomXXX()
-    # move simple augmentation pipeline to build_model
-    simple_aug = keras.Sequential([
-        keras.layers.RandomFlip('horizontal'),
-        keras.layers.RandomRotation(factor=0.02),
-        keras.layers.RandomZoom(height_factor=0.2, width_factor=0.2)
-    ])
-    '''
     def preprocessing_map(image):
         transform = keras.Sequential([
             keras.layers.Resizing(resolution, resolution),
@@ -90,6 +80,7 @@ def load_imagenet(resolution: int, batch_size: int, dir_path: str):
         keras.layers.RandomZoom(height_factor=0.2, width_factor=0.2)
     ])
     '''
+    
     def preprocessing_map(image):
         transform = keras.Sequential([
             keras.layers.Rescaling(1/255),
