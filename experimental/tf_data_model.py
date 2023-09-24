@@ -94,7 +94,8 @@ def load_imagenet(resolution: int, batch_size: int, dir_path: str):
                 directory=f'{dir_path}/imagenet/train',
                 label_mode='int', # for keras.losses.SparseCategoricalCrossentropy()
                 batch_size=batch_size,
-                image_size=(resolution, resolution)
+                image_size=(resolution, resolution),
+                shuffle=True
             )
             .map(
                 lambda x, y: (preprocessing_map(x), y),
@@ -108,7 +109,8 @@ def load_imagenet(resolution: int, batch_size: int, dir_path: str):
                 directory=f'{dir_path}/imagenet/val',
                 label_mode='int', # for keras.losses.SparseCategoricalCrossentropy()
                 batch_size=batch_size,
-                image_size=(resolution, resolution)
+                image_size=(resolution, resolution),
+                shuffle=False
             )
             .map(
                 lambda x, y: (preprocessing_map(x), y),
