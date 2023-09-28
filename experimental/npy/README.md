@@ -16,7 +16,7 @@
     - batch\_size: [510, 360, 170]
     - resolution: [160, 224, 288]
     - dropout\_rate: [0.1, 0.2, 0.3]
-- folder: bs{nx}\_{mp?}\_{xla?}
-    - ex. bs4x\_mp
-- file name: {dataset}\_{model}\_{cycle}\_{epochs}\_{shm?}.npy
-    - ex. imagenet\_resnet18\_cycle\_90\_shm.npy
+- folder: bs{nx}
+    - ex. bs4x
+- file name: {dataset}\_{model}\_{epochs}\_{cycle?}\_{amp?}_\{xla?}\_{shm?}.npy
+    - ex. imagenet\_resnet18\_90\_cycle\_shm.npy
