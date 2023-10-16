@@ -1,11 +1,13 @@
-from typing import Optional, Union
+from typing import Optional
 import tensorflow as tf
 from tensorflow import keras
+
 
 # "True" for TF 2.6, "False" for TF 2.13
 # Support weight_dacay via keras.model instead of keras.optimizers
 TEST = True
 weight_decay = 1e-4
+
 
 def load_cifar(resolution: int, batch_size: int, dataset: str):
     mean = [0.485, 0.456, 0.406]
@@ -263,11 +265,11 @@ def load_data(
 
 
 def modify_resnet(
-    old_model: Union[keras.Model, None],
     dataset: str,
     depth: int,
     dropout_rate: float,
-    resolution: int
+    resolution: int,
+    old_model: Optional[keras.Model] = None
 ) -> keras.Model:
     keras.backend.clear_session()
     new_model = build_resnet(
