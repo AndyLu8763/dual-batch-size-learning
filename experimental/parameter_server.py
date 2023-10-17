@@ -37,9 +37,8 @@ class Worker(object):
         self.ps_rref = ps_rref
         self.rank = rank
         self.args = args
-        self.dataloader = tfdm.load_data(
-            
-        )
+        self.dataloader = None
+        self.model = None
 
     def print_results(self):
         pass
