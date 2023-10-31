@@ -32,3 +32,4 @@ for i in range(0, epochs):
         end=''
     )
     print('----')
+print(f'total training time: {np.cumsum(logs["t"])[-1]}')

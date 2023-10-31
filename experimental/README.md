@@ -75,4 +75,4 @@ If you do not do this, the results can not be saved.
 
 ### Others
 - For tensorflow new version, try to use `keras-cv` instead of `imgaug` for doing image augmentation.
-- for latest version, use `pip install -U torch torchvision tensorflow keras-cv`
+- for latest version, use `pip install -U torch torchvision tensorflow[and-cuda] keras-cv`

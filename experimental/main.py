@@ -14,7 +14,7 @@ class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.MetavarTy
     pass
 parser = argparse.ArgumentParser(
     description='Progressive Dual Batch Size Deep Learning for Distributed Parameter Server Systems',
-    epilog='required sttings [--rank, --world-size, --server-addr, --dataset] or [-r, -w, -a, -d], optional settings [--amp, --xla]',
+    epilog='required sttings [--rank, --world-size, --server-addr, --dataset, --dir-path] or [-r, -w, -a, -d, -p], optional settings [--amp, --xla, --no-cycle]',
     formatter_class=CustomFormatter,
 )
 ## RPC setting
@@ -35,7 +35,7 @@ parser.add_argument(
     help='the master address of the parameter server',
 )
 parser.add_argument(
-    '--server-port', '--port', '-p',
+    '--server-port', '--port',
     dest='port',
     default='48763',
     type=str,
@@ -62,12 +62,12 @@ parser.add_argument(
 )
 ### dataset and model
 parser.add_argument(
-    '--dataset', '-d',
+    '--dataset', '--data', '-d',
     type=str,
     help='dataset to train, currently supports ["cifar10", "cifar100", "imagenet"]',
 )
 parser.add_argument(
-    '--dir-path', '--path',
+    '--dir-path', '--path', '-p',
     type=str,
     help='path to the dataset directory',
 )
