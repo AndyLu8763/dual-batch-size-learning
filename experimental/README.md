@@ -14,15 +14,17 @@ K. -W. Lu, P. Liu, D. -Y. Hong and J. -J. Wu, "Efficient Dual Batch Size Deep Le
 If you do not do this, the results can not be saved.
 
 ## Environment
-- python 3.9
-- pytorch 1.10.* (1.10.2)
-- torchvision 0.11.* (0.11.3)
-- tensorflow 2.6.* (2.6.5)
+Build at 2023/11/16
+- python 3.11
+- tensorflow 2.15.* (2.15.0)
+- torch 2.1.* (2.1.1)
+- torchvision 0.16.* (0.16.1)
+- (Optional) keras-cv 0.6.* (0.6.4)
 
 ## Installation
 1. Create conda environment:
     ```
-    conda create -n DBSDL python=3.9
+    conda create -n DBSDL python=3.11
     ```
 2. Activate conda environment:
     ```
@@ -31,19 +33,19 @@ If you do not do this, the results can not be saved.
 3. Install pip packages:
     - For just running programs:
         ```
-        pip install -U torch==1.10.* torchvision==0.11.* tensorflow==2.6.* imgaug
+        pip install -U tensorflow[and-cuda]==2.15.* torch torchvision
         ```
-    - For running programs and analyzing data:
+    - For running programs, analyzing data, and others:
         - for `jupyterlab`
             ```
-            pip install -U torch==1.10.* torchvision==0.11.* tensorflow==2.6.* jupyterlab matplotlib scikit-learn imgaug
+            pip install -U tensorflow[and-cuda]==2.15.* torch torchvision jupyterlab matplotlib scikit-learn keras-cv
             ```
         - for `nbclassic`
             ```
-            pip install -U torch==1.10.* torchvision==0.11.* tensorflow==2.6.* nbclassic matplotlib scikit-learn imgaug
+            pip install -U tensorflow[and-cuda]==2.15.* torch torchvision nbclassic matplotlib scikit-learn keras-cv
             ```
 
-### Jupyter Remote Setting
+## Jupyter Remote Setting
 - packages: `jupyterlab`, `notebook`, `nbclassic`
 1. python
     - from jupyter_server.auth import passwd
@@ -73,6 +75,36 @@ If you do not do this, the results can not be saved.
             - c.ServerApp.password = u'argon2:xxx'
             - c.ServerApp.port = 8763
 
-### Others
-- For tensorflow new version, try to use `keras-cv` instead of `imgaug` for doing image augmentation.
-- for latest version, use `pip install -U torch torchvision tensorflow[and-cuda] keras-cv`
+## Others
+- EZ quick start with `pip install -U tensorflow[and-cuda] torch torchvision`
+- For tensorflow old version, try to use `imgaug` instead of `keras-cv` for doing image augmentation.
+
+## ~~Too Old (Depricated)~~
+### Environment
+- python 3.9
+- pytorch 1.10.* (1.10.2)
+- torchvision 0.11.* (0.11.3)
+- tensorflow 2.6.* (2.6.5)
+### Installation
+1. Create conda environment:
+    ```
+    conda create -n DBSDL python=3.9
+    ```
+2. Activate conda environment:
+    ```
+    conda activate DBSDL
+    ```
+3. Install pip packages:
+    - For just running programs:
+        ```
+        pip install -U tensorflow==2.6.* torch==1.10.* torchvision==0.11.*
+        ```
+    - For running programs, analyzing data, and others:
+        - for `jupyterlab`
+            ```
+            pip install -U tensorflow==2.6.* torch==1.10.* torchvision==0.11.* jupyterlab matplotlib scikit-learn imgaug
+            ```
+        - for `nbclassic`
+            ```
+            pip install -U tensorflow==2.6.* torch==1.10.* torchvision==0.11.* nbclassic matplotlib scikit-learn imgaug
+            ```

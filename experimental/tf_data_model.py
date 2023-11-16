@@ -4,24 +4,26 @@ import tensorflow as tf
 from tensorflow import keras
 
 
-# "True" for TF 2.6, "False" for TF 2.13
+# "True" for TF 2.6 and other older versions, "False" for newer versions
 # Support weight_dacay via keras.model instead of keras.optimizers
-TEST = True
+OLD_VERSION = False
 weight_decay = 1e-4
+mean = [0.485, 0.456, 0.406]
+std = [0.299, 0.224, 0.225]
+var = [0.089401, 0.050176, 0.050625] # tf.math.square(std)
+cifar_dataset_list = ['cifar10', 'cifar100']
+imagenet_dataset_list = ['imagenet']
+dataset_list = cifar_dataset_list + imagenet_dataset_list
+depth_list = [18, 34]
+cifar_resolution_list = [16, 24, 32]
+imagenet_resolution_list = [160, 224, 288]
 
 
 def load_cifar(resolution: int, batch_size: int, dataset: str):
-    mean = [0.485, 0.456, 0.406]
-    std = [0.299, 0.224, 0.225]
-    var = [0.089401, 0.050176, 0.050625] # tf.math.square(std)
-    
-    resolution_list = [16, 24, 32]
-    dataset_list = ['cifar10', 'cifar100']
-    
-    if resolution not in resolution_list:
-        raise ValueError(f'Invalid resolution "{resolution}", it should be in {resolution_list}.')
-    if dataset not in dataset_list:
-        raise ValueError(f'Invalid resolution "{dataset}", it should be in {dataset_list}.')
+    if resolution not in cifar_resolution_list:
+        raise ValueError(f'Invalid resolution "{resolution}", it should be in {cifar_resolution_list}.')
+    if dataset not in cifar_dataset_list:
+        raise ValueError(f'Invalid resolution "{dataset}", it should be in {cifar_dataset_list}.')
     
     def preprocessing_map(image):
         transform = keras.Sequential([
@@ -64,14 +66,8 @@ def load_cifar(resolution: int, batch_size: int, dataset: str):
 
 
 def load_imagenet(resolution: int, batch_size: int, dir_path: str):
-    mean = [0.485, 0.456, 0.406]
-    std = [0.299, 0.224, 0.225]
-    var = [0.089401, 0.050176, 0.050625] # tf.math.square(std)
-    
-    resolution_list = [160, 224, 288]
-    
-    if resolution not in resolution_list:
-        raise ValueError(f'Invalid resolution "{resolution}", it should be in {resolution_list}.')
+    if resolution not in imagenet_resolution_list:
+        raise ValueError(f'Invalid resolution "{resolution}", it should be in {imagenet_resolution_list}.')
     
     '''
     # keras.utils.image_dataset_from_directory() can not allow simple augmentation pipeline
@@ -79,8 +75,8 @@ def load_imagenet(resolution: int, batch_size: int, dir_path: str):
     # move simple augmentation pipeline to build_model
     simple_aug = keras.Sequential([
         keras.layers.RandomFlip('horizontal'),
-        keras.layers.RandomRotation(factor=0.02),
-        keras.layers.RandomZoom(height_factor=0.2, width_factor=0.2)
+        keras.layers.RandomRotation(0.1),
+        keras.layers.RandomZoom(0.25)
     ])
     '''
     
@@ -132,23 +128,16 @@ def build_resnet(
     depth: int,
     dropout_rate: float,
     resolution: int,
-    TEST_KERNEL_REGULARIZERS=keras.regularizers.L2(weight_decay) if TEST else None
+    TEST_KERNEL_REGULARIZERS=keras.regularizers.L2(weight_decay) if OLD_VERSION else None
 ) -> keras.Model:
-    dataset_list = ['cifar10', 'cifar100', 'imagenet']
-    depth_list = [18, 34]
-    cifar_resolution_list = [16, 24, 32]
-    imagenet_resolution_list = [160, 224, 288]
-    
     if dataset not in dataset_list:
         raise ValueError(f'Invalid dataset "{dataset}", it should be in {dataset_list}.')
     if depth not in depth_list:
         raise ValueError(f'Invalid depth "{depth}", it should be in {depth_list}.')
-    if 'cifar' in dataset:
-        if resolution not in cifar_resolution_list:
-            raise ValueError(f'Invalid resolution "{resolution}", it should be in {cifar_resolution_list}.')
-    if 'imagenet' in dataset:
-        if resolution not in imagenet_resolution_list:
-            raise ValueError(f'Invalid resolution "{resolution}", it should be in {imagenet_resolution_list}.')
+    if 'cifar' in dataset and resolution not in cifar_resolution_list:
+        raise ValueError(f'Invalid resolution "{resolution}", it should be in {cifar_resolution_list}.')
+    if 'imagenet' in dataset and resolution not in imagenet_resolution_list:
+        raise ValueError(f'Invalid resolution "{resolution}", it should be in {imagenet_resolution_list}.')
     
     if dataset == 'cifar10':
         classes = 10
@@ -208,8 +197,8 @@ def build_resnet(
     ## simple augmentation pipeline
     simple_aug = keras.Sequential([
         keras.layers.RandomFlip('horizontal'),
-        keras.layers.RandomRotation(factor=0.02),
-        keras.layers.RandomZoom(height_factor=0.2, width_factor=0.2)
+        keras.layers.RandomRotation(0.1),
+        keras.layers.RandomZoom(0.25)
     ])
     x = simple_aug(inputs)
     ## stem
@@ -253,8 +242,6 @@ def load_data(
     dataset: str,
     dir_path: Optional[str] = None
 ):
-    dataset_list = ['cifar10', 'cifar100', 'imagenet']
-    
     if 'cifar' in dataset:
         return load_cifar(resolution=resolution, batch_size=batch_size, dataset=dataset)
     elif dataset == 'imagenet':
