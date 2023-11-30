@@ -4,10 +4,12 @@ import tensorflow as tf
 from tensorflow import keras
 
 
-# "True" for TF 2.6 and other older versions, "False" for newer versions
-# Support weight_dacay via keras.model instead of keras.optimizers
+# Maintain WEIGHT_DECAY of different TF versions through OLD_VERSION
+## "True" for TF 2.6 and other older versions, "False" for newer versions
+## Support weight_dacay via keras.model instead of keras.optimizers
 OLD_VERSION = False
 weight_decay = 1e-4
+
 mean = [0.485, 0.456, 0.406]
 std = [0.299, 0.224, 0.225]
 var = [0.089401, 0.050176, 0.050625] # tf.math.square(std)
@@ -27,9 +29,7 @@ def load_cifar(resolution: int, batch_size: int, dataset: str):
     
     def preprocessing_map(image):
         transform = keras.Sequential([
-            keras.layers.Resizing(resolution, resolution),
-            keras.layers.Rescaling(1/255),
-            keras.layers.Normalization(mean=mean, variance=var)
+            keras.layers.Resizing(resolution, resolution)
         ])
         return transform(image)
     
@@ -75,17 +75,15 @@ def load_imagenet(resolution: int, batch_size: int, dir_path: str):
     # move simple augmentation pipeline to build_model
     simple_aug = keras.Sequential([
         keras.layers.RandomFlip('horizontal'),
-        keras.layers.RandomRotation(0.1),
+        keras.layers.RandomRotation(0.05),
         keras.layers.RandomZoom(0.25)
     ])
     '''
     
-    def preprocessing_map(image):
-        transform = keras.Sequential([
-            keras.layers.Rescaling(1/255),
-            keras.layers.Normalization(mean=mean, variance=var)
-        ])
-        return transform(image)
+    #def preprocessing_map(image):
+    #    transform = keras.Sequential([
+    #    ])
+    #    return transform(image)
     
     dataloader = {
         'train': (
@@ -96,11 +94,11 @@ def load_imagenet(resolution: int, batch_size: int, dir_path: str):
                 image_size=(resolution, resolution),
                 shuffle=True
             )
-            .map(
-                lambda x, y: (preprocessing_map(x), y),
-                num_parallel_calls=tf.data.AUTOTUNE
-            )
-            # tf.data.cache() is a bomb, causing excessive memory usage when training imagenet
+            #.map(
+            #    lambda x, y: (preprocessing_map(x), y),
+            #    num_parallel_calls=tf.data.AUTOTUNE
+            #)
+            #.cache() # tf.data.cache() is a bomb, causing excessive memory usage when training imagenet
             .prefetch(buffer_size=tf.data.AUTOTUNE)
         ),
         'val': (
@@ -111,11 +109,11 @@ def load_imagenet(resolution: int, batch_size: int, dir_path: str):
                 image_size=(resolution, resolution),
                 shuffle=False
             )
-            .map(
-                lambda x, y: (preprocessing_map(x), y),
-                num_parallel_calls=tf.data.AUTOTUNE
-            )
-            # tf.data.cache() is a bomb, causing excessive memory usage when training imagenet
+            #.map(
+            #    lambda x, y: (preprocessing_map(x), y),
+            #    num_parallel_calls=tf.data.AUTOTUNE
+            #)
+            #.cache() # tf.data.cache() is a bomb, causing excessive memory usage when training imagenet
             .prefetch(buffer_size=tf.data.AUTOTUNE)
         )
     }
@@ -197,8 +195,10 @@ def build_resnet(
     ## simple augmentation pipeline
     simple_aug = keras.Sequential([
         keras.layers.RandomFlip('horizontal'),
-        keras.layers.RandomRotation(0.1),
-        keras.layers.RandomZoom(0.25)
+        keras.layers.RandomRotation(0.05),
+        keras.layers.RandomZoom(0.25),
+        keras.layers.Rescaling(1/255),
+        keras.layers.Normalization(mean=mean, variance=var)
     ])
     x = simple_aug(inputs)
     ## stem
@@ -265,7 +265,7 @@ def modify_resnet(
         depth=depth,
         dropout_rate=dropout_rate,
         resolution=resolution,
-        TEST_KERNEL_REGULARIZERS=keras.regularizers.L2(weight_decay) if TEST else None
+        TEST_KERNEL_REGULARIZERS=keras.regularizers.L2(weight_decay) if OLD_VERSION else None
     )
     if old_model:
         new_model.set_weights(old_model.get_weights())
