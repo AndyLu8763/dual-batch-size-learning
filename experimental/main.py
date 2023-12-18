@@ -14,7 +14,13 @@ class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.MetavarTy
     pass
 parser = argparse.ArgumentParser(
     description='Progressive Dual Batch Size Deep Learning for Distributed Parameter Server Systems',
-    epilog='required sttings [--rank, --world-size, --server-addr, --dataset, --dir-path] or [-r, -w, -a, -d, -p], optional settings [--amp, --xla, --no-cycle]',
+    epilog=(
+        'The parser only supports high-level control options. '
+        'If the user wants to adjust low-level control options, modify the code. '
+        'Required settings [--rank, --world-size, --server-addr, --dataset, --dir-path] '
+        'or [-r, -w, -a, -d, -p], '
+        'optional settings [--amp, --xla, --depth, --server-port, --no-cycle, --no-temp, --no-save].'
+    ),
     formatter_class=CustomFormatter,
 )
 ## RPC setting
@@ -42,11 +48,21 @@ parser.add_argument(
     help='the port that the master listens to, the default is "48763"',
 )
 ## high-level control options
-### device
 parser.add_argument(
-    '--multi-gpu',
-    action='store_true',
-    help='training using multiple GPUs, not yet completed',
+    '--dataset', '--data', '-d',
+    type=str,
+    help='dataset to train, currently supports ["cifar10", "cifar100", "imagenet"]',
+)
+parser.add_argument(
+    '--dir-path', '--path', '-p',
+    type=str,
+    help='path to the dataset directory',
+)
+parser.add_argument(
+    '--depth',
+    type=int,
+    default=18,
+    help='resnet depth, currently supports [18, 34]',
 )
 parser.add_argument(
     '--mixed-precision', '--amp',
@@ -60,25 +76,17 @@ parser.add_argument(
     action='store_true',
     help='train with jit compile (xla)',
 )
-### dataset and model
 parser.add_argument(
-    '--dataset', '--data', '-d',
+    '--comments', '-c',
     type=str,
-    help='dataset to train, currently supports ["cifar10", "cifar100", "imagenet"]',
+    help='add additional comments on filename',
 )
-parser.add_argument(
-    '--dir-path', '--path', '-p',
-    type=str,
-    help='path to the dataset directory',
-)
-### training
 parser.add_argument(
     '--no-cycle',
     dest='cycle',
     action='store_false',
     help='do not use all image resolutions with different learning rates',
 )
-### output file
 parser.add_argument(
     '--no-temp',
     dest='temp',
@@ -91,66 +99,8 @@ parser.add_argument(
     action='store_false',
     help='do not save the training results, including "_model" and ".npy"',
 )
-## low-level control options
-### device
-parser.add_argument(
-    '--device-index',
-    type=int,
-    default=0,
-    help='GPU number'
-)
-### dataset and model
-parser.add_argument(
-    '--depth',
-    type=int,
-    default=18,
-    help='model depth, should be 18 or 34'
-)
-### training
-parser.add_argument(
-    '--learning-rate',
-    type=float,
-    default=1e-1,
-    help='learning rate'
-)
-parser.add_argument(
-    '--momentum',
-    type=float,
-    default=0.9,
-    help='momentum factor'
-)
-parser.add_argument(
-    '--weight-decay',
-    type=float,
-    default=1e-4,
-    help='weight decay (L2 penalty), it is useless here for optimizers in TF2.6, modify it directly in "tf_data_model.py"',
-)
-parser.add_argument(
-    '--epochs',
-    type=int,
-    default=90,
-    help='total training epochs'
-)
-parser.add_argument(
-    '--step',
-    type=int,
-    default=3,
-    help='number of learning rate decay',
-)
-parser.add_argument(
-    '--gamma',
-    type=float,
-    default=0.1,
-    help='multiplicative factor of learning rate decay',
-)
-### output file
 
-def run_worker(ps_rref, rank, args):
-    worker = parameter_server.Worker(ps_rref, rank, args)
-    worker.train()
-    print('Training Complete')
-
-
+# running server && worker
 def run_server(args):
     ps_rref = rpc.RRef(parameter_server.Server(args))
     future_list = []
@@ -167,12 +117,15 @@ def run_server(args):
         ps_rref.rpc_sync().save_history()
     print('Complete, End Program')
 
+def run_worker(ps_rref, rank, args):
+    worker = parameter_server.Worker(ps_rref, rank, args)
+    worker.train()
+    print('Training Complete')
 
+
+# main
 def main():
     # get args
-    ## check the file type is '.py' or '.ipynb'
-    ### parse args of '.ipynb' from here
-    ### ex. ['--dataset=imagenet', '--path=./dataset', '--cycle', '--amp', '--xla']
     args = parser.parse_args()
     print(args)
 
@@ -186,6 +139,7 @@ def main():
     if args.dataset not in dataset_list:
         raise ValueError(f'Invalid dataset "{args.dataset}", it should be in {dataset_list}.')
     
+    '''
     # extend and rebuild args 1
     batch_size_ls = [1000, 500] if 'cifar' in args.dataset else [510, 360, 170]
     resolution_ls = [24, 32] if 'cifar' in args.dataset else [160, 224, 288]
@@ -217,14 +171,16 @@ def main():
         '--outfile',
         default=(
             f'{args.dataset}_resnet{args.depth}_{args.epochs}'
-            f'{"_cycle" if args.cycle else ""}'
             f'{"_amp" if args.amp else ""}'
             f'{"_xla" if args.xla else ""}'
+            f'{"" if args.cycle else "_nocycle"}'
         )
     )
     args = parser.parse_args()
     print(args)
-    
+    '''
+
+"""
     # RPC
     ########os.environ['MASTER_ADDR'] = args.addr
     ########os.environ['MASTER_PORT'] = args.port
@@ -249,7 +205,11 @@ def main():
             rpc_backend_options=backend_options,
         )
     rpc.shutdown()
-
+"""
 
 if __name__ == '__main__':
+    # args:
+    # [rank, word_size, addr, port,
+    #  dataset, dir_path, amp, xla, comments,
+    #  depth, cycle, temp, save]
     main()

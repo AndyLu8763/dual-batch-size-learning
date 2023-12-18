@@ -1,47 +1,55 @@
-import argparse
-import itertools
-import os
-import shutil
-import sys
+import threading
 import time
 
-import numpy as np
-import tensorflow as tf
-from tensorflow import keras
+# args
+# world_size, 
 
-import tf_data_model as tfdm
-
-
+# Server
 class Server(object):
     def __init__(self, args):
-        self.args = args
-
-    def count_epoch(self):
+        # setting
+        self.mission_complete = False
+        self.start_time = time.perf_counter()
+        self.total_mini_epoch = None # total_epoch * world_size
+        # model
+        self.model_lock = threading.Lock()
+        # epoch counter
+        # record
+        self.history_lock = threading.Lock()
+        self.history = {
+            # ID
+            'worker_ID': [],
+            'commit_ID': [],
+            'step_ID': [],
+            'stage_ID': [],
+            # train
+            'train_loss': [],
+            'train_acc': [],
+            'train_time': [],   # count from model.fit start
+            # val
+            'val_loss': [],
+            'val_acc': [],
+            'commit_time': [],  # count from program start
+        }
+    
+    def check_mission_complete():
         pass
 
-    def get_model_state(self):
+    def get_parameter():
         pass
 
-    def update_model(self):
+    def push_and_pull_model():
         pass
 
-    def record_history(self):
+    def send_history():
         pass
 
-    def save_history(self):
-        pass
-
-
+# Worker
 class Worker(object):
-    def __init__(self, ps_rref, rank, args):
+    def __init__(self, ps_rref, rank):
         self.ps_rref = ps_rref
         self.rank = rank
-        self.args = args
-        self.dataloader = None
-        self.model = None
 
-    def print_results(self):
-        pass
-    
     def train(self):
-        pass
+        while True:
+            pass

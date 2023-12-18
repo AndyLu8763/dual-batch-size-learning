@@ -16,10 +16,10 @@ If you do not do this, the results can not be saved.
 ## Environment
 Build at 2023/11/16
 - python 3.11
-- tensorflow 2.15.* (2.15.0)
-- torch 2.1.* (2.1.1)
-- torchvision 0.16.* (0.16.1)
-- (Optional) keras-cv 0.6.* (0.6.4)
+- tensorflow 2.13.*
+- torch
+- (Optional) keras-cv
+- (Optional) torchvision
 
 ## Installation
 1. Create conda environment:
@@ -33,17 +33,19 @@ Build at 2023/11/16
 3. Install pip packages:
     - For just running programs:
         ```
-        pip install -U tensorflow[and-cuda]==2.15.* torch torchvision
+        pip install -U tensorflow==2.13.* torch
         ```
     - For running programs, analyzing data, and others:
         - for `jupyterlab`
             ```
-            pip install -U tensorflow[and-cuda]==2.15.* torch torchvision jupyterlab matplotlib scikit-learn keras-cv
+            pip install -U tensorflow==2.13.* torch jupyterlab matplotlib scikit-learn keras-cv torchvision
             ```
         - for `nbclassic`
             ```
-            pip install -U tensorflow[and-cuda]==2.15.* torch torchvision nbclassic matplotlib scikit-learn keras-cv
+            pip install -U tensorflow==2.13.* torch nbclassic matplotlib scikit-learn keras-cv torchvision
             ```
+    - Others:
+        - tensorflow 2.15 can not work, still trying now, `pip install -U tensorflow[and-cuda]==2.15.* torch`
 
 ## Jupyter Remote Setting
 - packages: `jupyterlab`, `notebook`, `nbclassic`
@@ -82,9 +84,8 @@ Build at 2023/11/16
 ## ~~Too Old (Depricated)~~
 ### Environment
 - python 3.9
-- pytorch 1.10.* (1.10.2)
-- torchvision 0.11.* (0.11.3)
 - tensorflow 2.6.* (2.6.5)
+- torch 1.10.* (1.10.2)
 ### Installation
 1. Create conda environment:
     ```
@@ -97,14 +98,14 @@ Build at 2023/11/16
 3. Install pip packages:
     - For just running programs:
         ```
-        pip install -U tensorflow==2.6.* torch==1.10.* torchvision==0.11.*
+        pip install -U tensorflow==2.6.* torch==1.10.*
         ```
     - For running programs, analyzing data, and others:
         - for `jupyterlab`
             ```
-            pip install -U tensorflow==2.6.* torch==1.10.* torchvision==0.11.* jupyterlab matplotlib scikit-learn imgaug
+            pip install -U tensorflow==2.6.* torch==1.10.* jupyterlab matplotlib scikit-learn imgaug torchvision
             ```
         - for `nbclassic`
             ```
-            pip install -U tensorflow==2.6.* torch==1.10.* torchvision==0.11.* nbclassic matplotlib scikit-learn imgaug
+            pip install -U tensorflow==2.6.* torch==1.10.* nbclassic matplotlib scikit-learn imgaug torchvision
             ```
