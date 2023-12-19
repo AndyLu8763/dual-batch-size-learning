@@ -1,6 +1,8 @@
 import argparse
-import itertools
+import os
 
+import tensorflow as tf
+from tensorflow import keras
 import torch
 from torch.distributed import rpc
 
@@ -9,7 +11,7 @@ import parameter_server
 
 # parser
 ## three parts: ['RPC_setting', 'high_level_control_options', 'low_level_control_options']
-## each 'control_options' have four parts: ['device', 'dataset_and_model', 'training', 'output_file']
+## 'low_level_control_options' is located in 'parameter_server.py'
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.MetavarTypeHelpFormatter):
     pass
 parser = argparse.ArgumentParser(
@@ -17,8 +19,8 @@ parser = argparse.ArgumentParser(
     epilog=(
         'The parser only supports high-level control options. '
         'If the user wants to adjust low-level control options, modify the code. '
-        'Required settings [--rank, --world-size, --server-addr, --dataset, --dir-path] '
-        'or [-r, -w, -a, -d, -p], '
+        'Required settings [--rank, --world-size, --num-small, --server-addr, --dataset, --dir-path] '
+        'or [-r, -w, -s, -a, -d, -p], '
         'optional settings [--amp, --xla, --depth, --server-port, --no-cycle, --no-temp, --no-save].'
     ),
     formatter_class=CustomFormatter,
@@ -33,6 +35,13 @@ parser.add_argument(
     '--world-size', '-w',
     type=int,
     help='total number of servers participating in the process',
+)
+parser.add_argument(
+    '--num-small', '--small', '-s',
+    dest='small',
+    default=0,
+    type=int,
+    help='number of small-batch workers in the process, the default is "0"',
 )
 parser.add_argument(
     '--server-addr', '--addr', '-a',
@@ -100,6 +109,7 @@ parser.add_argument(
     help='do not save the training results, including "_model" and ".npy"',
 )
 
+
 # running server && worker
 def run_server(args):
     ps_rref = rpc.RRef(parameter_server.Server(args))
@@ -109,7 +119,7 @@ def run_server(args):
             rpc.rpc_async(
                 f'worker_{i}',
                 run_worker,
-                args=(ps_rref, i, args),
+                args=(args, ps_rref, i, True if i <= args.small else False),
             )
         )
     torch.futures.wait_all(future_list)
@@ -117,73 +127,44 @@ def run_server(args):
         ps_rref.rpc_sync().save_history()
     print('Complete, End Program')
 
-def run_worker(ps_rref, rank, args):
-    worker = parameter_server.Worker(ps_rref, rank, args)
+def run_worker(args, ps_rref, rank, is_small_batch):
+    worker = parameter_server.Worker(args, ps_rref, rank, is_small_batch)
     worker.train()
     print('Training Complete')
 
 
 # main
 def main():
-    # get args
+    # parse args
     args = parser.parse_args()
-    print(args)
-
     if args.rank == None:
         raise ValueError('"rank" argument is required')
     if args.world_size == None:
         raise ValueError('"world_size" argument is required')
     if args.addr == None:
         raise ValueError('"master_addr" argument is required')
-    dataset_list = ['cifar10', 'cifar100', 'imagenet']
-    if args.dataset not in dataset_list:
-        raise ValueError(f'Invalid dataset "{args.dataset}", it should be in {dataset_list}.')
-    
-    '''
-    # extend and rebuild args 1
-    batch_size_ls = [1000, 500] if 'cifar' in args.dataset else [510, 360, 170]
-    resolution_ls = [24, 32] if 'cifar' in args.dataset else [160, 224, 288]
-    dropout_rate_ls = [0.1, 0.2] if 'cifar' in args.dataset else [0.1, 0.2, 0.3]
-    parser.add_argument(
-        '--batch-size-iter',
-        default=itertools.cycle(batch_size_ls)
-    )
-    parser.add_argument(
-        '--resoultion-iter',
-        default=itertools.cycle(resolution_ls)
-    )
-    parser.add_argument(
-        '--dropout-rate-iter',
-        default=itertools.cycle(dropout_rate_ls)
-    )
-    parser.add_argument(
-        '--milestones',
-        default=list(int(args.epochs * i / args.step) for i in range(1, args.step))
-    )
-    args = parser.parse_args()
-    
-    # extend and rebuild args 2
-    parser.add_argument(
-        '--modify-freq',
-        default=int((args.milestones[0] if args.cycle else args.epochs) / len(resolution_ls))
-    )
-    parser.add_argument(
-        '--outfile',
-        default=(
-            f'{args.dataset}_resnet{args.depth}_{args.epochs}'
-            f'{"_amp" if args.amp else ""}'
-            f'{"_xla" if args.xla else ""}'
-            f'{"" if args.cycle else "_nocycle"}'
-        )
-    )
-    args = parser.parse_args()
+    print('----')
     print(args)
-    '''
+    print('----')
 
-"""
+    # amp, xla
+    if args.xla:
+        os.environ['TF_XLA_FLAGS'] = '--tf_xla_cpu_global_jit'
+        tf.config.optimizer.set_jit('autoclustering')
+        print(f'Optimizer set_jit: "{tf.config.optimizer.get_jit()}"')
+    if args.amp:
+        policy = keras.mixed_precision.Policy('mixed_float16')
+        keras.mixed_precision.set_global_policy(policy)
+        print(f'Policy: {policy.name}')
+        print(f'Compute dtype: {policy.compute_dtype}')
+        print(f'Variable dtype: {policy.variable_dtype}')
+    print('----')
+    print(f'MIXED_PRECISION: {args.amp}')
+    print(f'JIT_COMPILE: {args.xla}')
+    print('----')
+
+    """
     # RPC
-    ########os.environ['MASTER_ADDR'] = args.addr
-    ########os.environ['MASTER_PORT'] = args.port
     backend_options = rpc.TensorPipeRpcBackendOptions(
         init_method=f'tcp://{args.addr}:{args.port}',
     )
@@ -205,11 +186,12 @@ def main():
             rpc_backend_options=backend_options,
         )
     rpc.shutdown()
-"""
+    """
+
 
 if __name__ == '__main__':
     # args:
-    # [rank, word_size, addr, port,
+    # [rank, world_size, small, addr, port,
     #  dataset, dir_path, amp, xla, comments,
     #  depth, cycle, temp, save]
     main()
