@@ -2,6 +2,7 @@ import itertools
 import threading
 import time
 
+from tensorflow import keras
 from torch.distributed import rpc
 
 import tf_data_model
@@ -22,7 +23,7 @@ class Server(object):
         self.parameter_lock = threading.Lock()
         self.epochs = 90
         self.steps = 3
-        self.mini_epochs = self.epochs * args.word_size
+        self.mini_epochs = self.epochs * args.world_size
         if args.dataset == 'cifar10' or args.dataset == 'cifar100': 
             self.large_batch_size_ls = [1000, 500]
             self.small_batch_size_ls = []
@@ -42,8 +43,10 @@ class Server(object):
         self.milestones = list(self.mini_epochs // self.steps * i for i in range(1, self.steps))
         self.modify_freq = (self.milestones[0] if args.cycle else self.mini_epochs) // len(self.resolution_ls)
         self.parameter = {
-            ## global commit ID
+            ## other options
             'global_commit_ID': 0,
+            'global_step_ID': 0,
+            'global_stage_ID': 0,
             ## low-level control options
             'device_index': 0,
             'learning_rate': 1e-1,
@@ -84,7 +87,7 @@ class Server(object):
         }
         self.outfile = (
             f'{args.dataset}_resnet{args.depth}_{self.epochs}'
-            f'_W{args.word_size}S{args.small}'
+            f'_W{args.world_size}S{args.small}'
             f'{"_amp" if args.amp else ""}'
             f'{"_xla" if args.xla else ""}'
             f'{"" if args.cycle else "_noCycle"}'
@@ -105,6 +108,12 @@ class Server(object):
     def set_history():
         pass
 
+    def save_tempfile():
+        pass
+
+    def save_outfile():
+        pass
+
 # Worker
 class Worker(object):
     def __init__(self, args, ps_rref, rank, is_small_batch):
@@ -113,9 +122,11 @@ class Worker(object):
         self.ps_rref = ps_rref
         self.rank = rank
         self.is_small_batch = is_small_batch
-        self.epoch_index = 0
-        self.parameter = None#rpc.rpc_sync(self.ps_rref.owner(), Server.get_parameter)
+        self.local_commit_ID = 0
+        self.parameter = None
         # data
+        self.step_ID = None
+        self.stage_ID = None
         self.dataloader = None
         '''tf_data_model.load_data(
             resolution=self.parameter['resolution'],
@@ -126,6 +137,37 @@ class Worker(object):
         self.model = None
 
     def train(self):
+        # get mission_complete
         while not rpc.rpc_sync(self.ps_rref.owner(), Server.get_mission_complete):
+            # get parameter
             self.parameter = rpc.rpc_sync(self.ps_rref.owner(), Server.get_parameter)
+            # check if parameter is modified
+            if self.step_ID != self.parameter['global_step_ID'] or self.stage_ID != self.parameter['global_stage_ID']:
+                self.step_ID = self.parameter['global_step_ID']
+                self.stage_ID = self.parameter['global_stage_ID']
+                # get data
+                self.dataloader = tf_data_model.load_data(
+                    resolution=self.parameter['resolution'],
+                    batch_size=self.parameter['small_batch_size'] if self.is_small_batch else self.parameter['large_batch_size'],
+                    dataset=self.args.dataset,
+                    dir_path=self.args.dir_path,
+                )
+                # get model
+                self.model = tf_data_model.modify_resnet(
+                    dataset=self.args.dataset,
+                    depth=self.args.depth,
+                    dropout_rate=self.parameter['dropout_rate'],
+                    resolution=self.parameter['resolution'],
+                    old_model=self.model if self.local_commit_ID else None,
+                )
+            # compile model
+            self.model.compile(
+                optimizer=keras.optimizers.experimental.SGD(
+                    learning_rate=self.parameter['learning_rate'],
+                    momentum=self.parameter['momentum'],
+                    weight_decay=self.parameter['weight_decay'],
+                ),
+                loss=keras.losses.SparseCategoricalCrossentropy(),
+                metrics=['accuracy'],
+            )
         pass
