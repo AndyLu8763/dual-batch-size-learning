@@ -68,12 +68,6 @@ parser.add_argument(
     help='path to the dataset directory',
 )
 parser.add_argument(
-    '--depth',
-    type=int,
-    default=18,
-    help='resnet depth, currently supports [18, 34]',
-)
-parser.add_argument(
     '--mixed-precision', '--amp',
     dest='amp',
     action='store_true',
@@ -89,6 +83,18 @@ parser.add_argument(
     '--comments', '-c',
     type=str,
     help='add additional comments on filename',
+)
+parser.add_argument(
+    '--device-index',
+    type=int,
+    default=0,
+    help='the index of the GPU used to run the program, "0" or "-1" is a good choice',
+)
+parser.add_argument(
+    '--depth',
+    type=int,
+    default=18,
+    help='resnet depth, currently supports [18, 34]',
 )
 parser.add_argument(
     '--no-cycle',
@@ -163,6 +169,16 @@ def main():
     print(f'JIT_COMPILE: {args.xla}')
     print('----')
 
+    # GPU initialization
+    physical_devices = tf.config.list_physical_devices('GPU')
+    tf.config.set_visible_devices(physical_devices[args.device_index], 'GPU')
+    for device in tf.config.get_visible_devices('GPU'):
+        tf.config.experimental.set_memory_growth(device, True)
+    print('----')
+    print(f'The Number of Available Physical Devices: {len(physical_devices)}')
+    print(f'Using Devices: {tf.config.get_visible_devices("GPU")}')
+    print('----')
+
     """
     # RPC
     backend_options = rpc.TensorPipeRpcBackendOptions(
@@ -193,5 +209,5 @@ if __name__ == '__main__':
     # args:
     # [rank, world_size, small, addr, port,
     #  dataset, dir_path, amp, xla, comments,
-    #  depth, cycle, temp, save]
+    #  device_index, depth, cycle, temp, save]
     main()

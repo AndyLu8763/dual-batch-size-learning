@@ -10,7 +10,7 @@ import tf_data_model
 # args:
 # [rank, world_size, small, addr, port,
 #  dataset, dir_path, amp, xla, comments,
-#  depth, cycle, temp, save]
+#  device_index, depth, cycle, temp, save]
 
 # Server
 class Server(object):
@@ -43,24 +43,23 @@ class Server(object):
         self.milestones = list(self.mini_epochs // self.steps * i for i in range(1, self.steps))
         self.modify_freq = (self.milestones[0] if args.cycle else self.mini_epochs) // len(self.resolution_ls)
         self.parameter = {
-            ## other options
+            # other options
             'global_commit_ID': 0,
             'global_step_ID': 0,
             'global_stage_ID': 0,
-            ## low-level control options
-            'device_index': 0,
+            # low-level control options
             'learning_rate': 1e-1,
             'momentum': 0.9,
             'weight_decay': 1e-4,
             'gamma': 0.1,
-            ## adaptive options
+            # adaptive options
             'large_batch_size': self.large_batch_size_ls[0],
             'small_batch_size': self.small_batch_size_ls[0],
             'resolution': self.resolution_ls[0],
             'dropout_rate': self.dropout_rate_ls[0],
         }
         # global model
-        self.model_lock = threading.Lock()
+        self.global_model_lock = threading.Lock()
         self.global_model = tf_data_model.modify_resnet(
             dataset=args.dataset,
             depth=args.depth,
@@ -72,8 +71,8 @@ class Server(object):
         self.history = {
             # ID
             'worker_ID': [],
-            'global_comit_ID': [],
-            'local_commit_ID': [],
+            'global_comit_ID': [],  # count by server
+            'local_commit_ID': [],  # count by worker
             'step_ID': [],
             'stage_ID': [],
             # train
@@ -99,14 +98,20 @@ class Server(object):
         self = ps_rref.local_value()
         pass
 
-    def get_parameter():
-        pass
+    def get_parameter(ps_rref):
+        self = ps_rref.local_value()
+        with self.parameter_lock:
+            pass
 
-    def push_and_pull_model():
-        pass
+    def push_and_pull_model(ps_rref):
+        self = ps_rref.local_value()
+        with self.global_model_lock:
+            pass
 
-    def set_history():
-        pass
+    def set_history(ps_rref):
+        self = ps_rref.local_value()
+        with self.history_lock:
+            pass
 
     def save_tempfile():
         pass
@@ -123,17 +128,11 @@ class Worker(object):
         self.rank = rank
         self.is_small_batch = is_small_batch
         self.local_commit_ID = 0
-        self.parameter = None
-        # data
         self.step_ID = None
         self.stage_ID = None
+        # training parameters, data, and model
+        self.parameter = None
         self.dataloader = None
-        '''tf_data_model.load_data(
-            resolution=self.parameter['resolution'],
-            batch_size=self.parameter['small_batch_size'] if is_small_batch else self.parameter['large_batch_size'],
-            dataset=args.dataset,
-        )'''
-        # local model
         self.model = None
 
     def train(self):
@@ -158,7 +157,10 @@ class Worker(object):
                     depth=self.args.depth,
                     dropout_rate=self.parameter['dropout_rate'],
                     resolution=self.parameter['resolution'],
-                    old_model=self.model if self.local_commit_ID else None,
+                    old_model=(
+                        self.model if self.local_commit_ID != 0
+                        else self.model.set_weights() #### set get_weights from server
+                    ),
                 )
             # compile model
             self.model.compile(
@@ -170,4 +172,16 @@ class Worker(object):
                 loss=keras.losses.SparseCategoricalCrossentropy(),
                 metrics=['accuracy'],
             )
-        pass
+            # train
+            train_logs = self.model.fit(
+
+            )
+            # push and pull
+            self.model.set_weights() #### set get_weights from server
+            # val
+            val_logs = self.model.evaluate(
+
+            )
+            # record
+            #### add something...
+        self.local_commit_ID += 1
