@@ -136,7 +136,7 @@ def run_server(args):
 def run_worker(args, ps_rref, rank, is_small_batch):
     worker = parameter_server.Worker(args, ps_rref, rank, is_small_batch)
     worker.train()
-    print('Training Complete')
+    print(f'Worker {rank} Training Complete')
 
 
 # main

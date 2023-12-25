@@ -40,8 +40,10 @@ class Server(object):
         self.small_batch_size_iter = itertools.cycle(self.small_batch_size_ls)
         self.resolution_iter = itertools.cycle(self.resolution_ls)
         self.dropout_rate_iter = itertools.cycle(self.dropout_rate_ls)
-        self.milestones = list(self.mini_epochs // self.steps * i for i in range(1, self.steps))
+        self.milestones = list(self.mini_epochs // self.steps * i for i in range(1, self.steps + 1))
         self.modify_freq = (self.milestones[0] if args.cycle else self.mini_epochs) // len(self.resolution_ls)
+        if self.modify_freq == 0:
+            raise ValueError('"modify_freq" is "0"')
         self.parameter = {
             # other options
             'global_commit_ID': 0,
@@ -71,7 +73,7 @@ class Server(object):
         self.history = {
             # ID
             'worker_ID': [],
-            'global_comit_ID': [],  # count by server
+            'global_commit_ID': [],  # count by server
             'local_commit_ID': [],  # count by worker
             'step_ID': [],
             'stage_ID': [],
@@ -93,24 +95,42 @@ class Server(object):
             f'{"_" + args.comments if args.comments else ""}'
         )
         self.tempfile = f'temp_{self.outfile}'
+
+    #### check which function should I update global_commit
+    #### all function should thinking again
+    #### give 'global_commit_ID' to worker when push_and_pull_model
     
+    #### need it???
     def get_mission_complete(ps_rref):
         self = ps_rref.local_value()
-        pass
+        with self.parameter_lock:
+            if self.parameter['global_commit_ID'] == self.mini_epochs:
+                self.mission_complete = True
+            return self.mission_complete
 
     def get_parameter(ps_rref):
         self = ps_rref.local_value()
         with self.parameter_lock:
-            pass
+            #### update parameter
+            return self.parameter
 
-    def push_and_pull_model(ps_rref):
+    def get_global_model_weights(ps_rref):
         self = ps_rref.local_value()
         with self.global_model_lock:
-            pass
+            return self.global_model.get_weights()
 
-    def set_history(ps_rref):
+    def push_and_pull_model(ps_rref, worker_weights, rank, is_small_batch, local_commit_ID):
+        self = ps_rref.local_value()
+        with self.global_model_lock:
+            if not self.mission_complete:
+                #### update global_model
+                pass
+            return self.global_model.get_weights()
+
+    def update_history(ps_rref, record):
         self = ps_rref.local_value()
         with self.history_lock:
+            #### update history
             pass
 
     def save_tempfile():
@@ -122,7 +142,7 @@ class Server(object):
 # Worker
 class Worker(object):
     def __init__(self, args, ps_rref, rank, is_small_batch):
-        # others
+        # settings
         self.args = args
         self.ps_rref = ps_rref
         self.rank = rank
@@ -130,16 +150,26 @@ class Worker(object):
         self.local_commit_ID = 0
         self.step_ID = None
         self.stage_ID = None
-        # training parameters, data, and model
+        # parameters, data, and model
         self.parameter = None
         self.dataloader = None
         self.model = None
+        self.verbose = 'auto'
+        # callback
+        class TimeCallback(keras.callbacks.Callback):
+            def on_train_begin(self, logs=None):
+                self.history = []
+            def on_epoch_begin(self, epoch, logs=None):
+                self.time_epoch_begin = time.perf_counter()
+            def on_epoch_end(self, epoch, logs=None):
+                self.history.append(time.perf_counter() - self.time_epoch_begin)
+        self.time_callback = TimeCallback()
 
     def train(self):
         # get mission_complete
-        while not rpc.rpc_sync(self.ps_rref.owner(), Server.get_mission_complete):
+        while not rpc.rpc_sync(self.ps_rref.owner(), Server.get_mission_complete, args=(self.ps_rref)):
             # get parameter
-            self.parameter = rpc.rpc_sync(self.ps_rref.owner(), Server.get_parameter)
+            self.parameter = rpc.rpc_sync(self.ps_rref.owner(), Server.get_parameter, args=(self.ps_rref))
             # check if parameter is modified
             if self.step_ID != self.parameter['global_step_ID'] or self.stage_ID != self.parameter['global_stage_ID']:
                 self.step_ID = self.parameter['global_step_ID']
@@ -157,11 +187,13 @@ class Worker(object):
                     depth=self.args.depth,
                     dropout_rate=self.parameter['dropout_rate'],
                     resolution=self.parameter['resolution'],
-                    old_model=(
-                        self.model if self.local_commit_ID != 0
-                        else self.model.set_weights() #### set get_weights from server
-                    ),
+                    old_model=self.model if self.local_commit_ID != 0 else None,
                 )
+                # set model weights first time
+                if self.local_commit_ID == 0:
+                    self.model.set_weights(
+                        rpc.rpc_sync(self.ps_rref.owner(), Server.get_global_model_weights, args=(self.ps_rref))
+                    )
             # compile model
             self.model.compile(
                 optimizer=keras.optimizers.experimental.SGD(
@@ -174,14 +206,47 @@ class Worker(object):
             )
             # train
             train_logs = self.model.fit(
-
+                self.dataloader['train'].take(), #### tf.data.Dataset.take(# of batch)
+                verbose=self.verbose,
+                callbacks=[self.time_callback],
             )
-            # push and pull
-            self.model.set_weights() #### set get_weights from server
+            train_logs.history['t'] = self.time_callback.history
+            # push and pull model
+            self.model.set_weights(
+                rpc.rpc_sync(
+                    self.ps_rref.owner(),
+                    Server.push_and_pull_model,
+                    args=(
+                        self.ps_rref,
+                        self.model.get_weights(),
+                        self.args.rank,
+                        self.is_small_batch,
+                        self.local_commit_ID,
+                    ),
+                )
+            )
             # val
             val_logs = self.model.evaluate(
-
+                self.dataloader['val'],
+                verbose=self.verbose,
+                return_dict=True,
             )
             # record
-            #### add something...
-        self.local_commit_ID += 1
+            record = {
+                # ID
+                'worker_ID': self.args.rank,
+                ##'global_commit_ID': [],  # count by server
+                'local_commit_ID': self.local_commit_ID,  # count by worker
+                'step_ID': self.step_ID,
+                'stage_ID': self.stage_ID,
+                # train
+                'train_loss': train_logs.history['loss'],
+                'train_acc': train_logs.history['accuracy'],
+                'train_time': train_logs.history['t'],   # count from model.fit start
+                # val
+                'val_loss': val_logs['loss'],
+                'val_acc': val_logs['accuracy'],
+                ##'commit_time': [],  # count from program start
+            }
+            rpc.rpc_sync(self.ps_rref.owner(), Server.update_history, args=(self.ps_rref, record))
+            self.local_commit_ID += 1
