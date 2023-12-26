@@ -1,4 +1,5 @@
 import itertools
+import math
 import threading
 import time
 
@@ -17,13 +18,14 @@ class Server(object):
     def __init__(self, args):
         # global setting
         self.args = args
-        self.mission_complete = False
         self.start_time = time.perf_counter()
+        self.mission_complete = False
         # training parameters
         self.parameter_lock = threading.Lock()
         self.epochs = 90
         self.steps = 3
         self.mini_epochs = self.epochs * args.world_size
+        self.global_commit_ID = -1
         if args.dataset == 'cifar10' or args.dataset == 'cifar100': 
             self.large_batch_size_ls = [1000, 500]
             self.small_batch_size_ls = []
@@ -46,7 +48,6 @@ class Server(object):
             raise ValueError('"modify_freq" is "0"')
         self.parameter = {
             # other options
-            'global_commit_ID': 0,
             'global_step_ID': 0,
             'global_stage_ID': 0,
             # low-level control options
@@ -55,10 +56,10 @@ class Server(object):
             'weight_decay': 1e-4,
             'gamma': 0.1,
             # adaptive options
-            'large_batch_size': self.large_batch_size_ls[0],
-            'small_batch_size': self.small_batch_size_ls[0],
-            'resolution': self.resolution_ls[0],
-            'dropout_rate': self.dropout_rate_ls[0],
+            'large_batch_size': next(self.large_batch_size_iter),
+            'small_batch_size': next(self.small_batch_size_iter),
+            'resolution': next(self.resolution_iter),
+            'dropout_rate': next(self.dropout_rate_iter),
         }
         # global model
         self.global_model_lock = threading.Lock()
@@ -98,20 +99,12 @@ class Server(object):
 
     #### check which function should I update global_commit
     #### all function should thinking again
-    #### give 'global_commit_ID' to worker when push_and_pull_model
-    
-    #### need it???
-    def get_mission_complete(ps_rref):
-        self = ps_rref.local_value()
-        with self.parameter_lock:
-            if self.parameter['global_commit_ID'] == self.mini_epochs:
-                self.mission_complete = True
-            return self.mission_complete
+    #### count 'self.global_commit_ID' to worker when push_and_pull_model
+    #### 'self.global_commit_ID' mean different things
 
     def get_parameter(ps_rref):
         self = ps_rref.local_value()
         with self.parameter_lock:
-            #### update parameter
             return self.parameter
 
     def get_global_model_weights(ps_rref):
@@ -121,22 +114,29 @@ class Server(object):
 
     def push_and_pull_model(ps_rref, worker_weights, rank, is_small_batch, local_commit_ID):
         self = ps_rref.local_value()
-        with self.global_model_lock:
+        with self.parameter_lock and self.global_model_lock:
+            self.global_commit_ID += 1
+            if self.global_commit_ID == self.mini_epochs:
+                self.mission_complete = True
             if not self.mission_complete:
-                #### update global_model
+                #### update parameter
                 pass
-            return self.global_model.get_weights()
+            return self.global_model.get_weights(), self.global_commit_ID, self.mission_complete
 
     def update_history(ps_rref, record):
         self = ps_rref.local_value()
         with self.history_lock:
-            #### update history
+            record['commit_time'] = time.perf_counter() - self.start_time
+            #### update record to history
             pass
 
     def save_tempfile():
+        #### use "rpc_async" to call, by worker??
+        #### how to decide save tempfile??
         pass
 
     def save_outfile():
+        #### use "rpc_sync" to call, by main.py
         pass
 
 # Worker
@@ -167,7 +167,7 @@ class Worker(object):
 
     def train(self):
         # get mission_complete
-        while not rpc.rpc_sync(self.ps_rref.owner(), Server.get_mission_complete, args=(self.ps_rref)):
+        while True:
             # get parameter
             self.parameter = rpc.rpc_sync(self.ps_rref.owner(), Server.get_parameter, args=(self.ps_rref))
             # check if parameter is modified
@@ -206,25 +206,25 @@ class Worker(object):
             )
             # train
             train_logs = self.model.fit(
-                self.dataloader['train'].take(), #### tf.data.Dataset.take(# of batch)
+                self.dataloader['train'].take(math.ceil()),
+                #### tf.data.Dataset.take(# of batch = allocated data / total data)
                 verbose=self.verbose,
                 callbacks=[self.time_callback],
             )
             train_logs.history['t'] = self.time_callback.history
             # push and pull model
-            self.model.set_weights(
-                rpc.rpc_sync(
-                    self.ps_rref.owner(),
-                    Server.push_and_pull_model,
-                    args=(
-                        self.ps_rref,
-                        self.model.get_weights(),
-                        self.args.rank,
-                        self.is_small_batch,
-                        self.local_commit_ID,
-                    ),
-                )
+            global_model_weights, global_commit_ID, mission_complete = rpc.rpc_sync(
+                self.ps_rref.owner(),
+                Server.push_and_pull_model,
+                args=(
+                    self.ps_rref,
+                    self.model.get_weights(),
+                    self.args.rank,
+                    self.is_small_batch,
+                    self.local_commit_ID,
+                ),
             )
+            self.model.set_weights(global_model_weights)
             # val
             val_logs = self.model.evaluate(
                 self.dataloader['val'],
@@ -235,7 +235,7 @@ class Worker(object):
             record = {
                 # ID
                 'worker_ID': self.args.rank,
-                ##'global_commit_ID': [],  # count by server
+                'global_commit_ID': global_commit_ID,  # count by server
                 'local_commit_ID': self.local_commit_ID,  # count by worker
                 'step_ID': self.step_ID,
                 'stage_ID': self.stage_ID,
@@ -246,7 +246,10 @@ class Worker(object):
                 # val
                 'val_loss': val_logs['loss'],
                 'val_acc': val_logs['accuracy'],
-                ##'commit_time': [],  # count from program start
+                'commit_time': None,  # count from program start
             }
             rpc.rpc_sync(self.ps_rref.owner(), Server.update_history, args=(self.ps_rref, record))
             self.local_commit_ID += 1
+            # check mission_complete
+            if mission_complete:
+                return
