@@ -106,7 +106,7 @@ parser.add_argument(
     '--no-temp',
     dest='temp',
     action='store_false',
-    help='do not save the temporary state during training, including "_model" and ".npy"',
+    help='do not save the temporary files during training, including "_model" and ".npy"',
 )
 parser.add_argument(
     '--no-save',
@@ -129,8 +129,7 @@ def run_server(args):
             )
         )
     torch.futures.wait_all(future_list)
-    if args.save:
-        ps_rref.rpc_sync().save_history()
+    ps_rref.rpc_sync().save_history()
     print('Complete, End Program')
 
 def run_worker(args, ps_rref, rank, is_small_batch):

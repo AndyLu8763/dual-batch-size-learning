@@ -1,8 +1,11 @@
 import itertools
 import math
+import os
+import shutil
 import threading
 import time
 
+import numpy as np
 from tensorflow import keras
 from torch.distributed import rpc
 
@@ -28,12 +31,12 @@ class Server(object):
         self.global_commit_ID = -1
         if args.dataset == 'cifar10' or args.dataset == 'cifar100': 
             self.large_batch_size_ls = [1000, 500]
-            self.small_batch_size_ls = []
+            self.small_batch_size_ls = [] #### should be completed by the algorithm
             self.resolution_ls = [24, 32]
             self.dropout_rate_ls = [0.1, 0.2]
         elif args.dataset == 'imagenet':
             self.large_batch_size_ls = [510, 360, 170]
-            self.small_batch_size_ls = []
+            self.small_batch_size_ls = [] #### should be completed by the algorithm
             self.resolution_ls = [160, 224, 288]
             self.dropout_rate_ls = [0.1, 0.2, 0.3]
         else:
@@ -42,6 +45,9 @@ class Server(object):
         self.small_batch_size_iter = itertools.cycle(self.small_batch_size_ls)
         self.resolution_iter = itertools.cycle(self.resolution_ls)
         self.dropout_rate_iter = itertools.cycle(self.dropout_rate_ls)
+        #### should milestones be [0, 9, 19, ...] or [1, 10, 20, ...]?
+        #### record commit_ID from '0' instead of '1'
+        #### thus the last commit is 'xx9'
         self.milestones = list(self.mini_epochs // self.steps * i for i in range(1, self.steps + 1))
         self.modify_freq = (self.milestones[0] if args.cycle else self.mini_epochs) // len(self.resolution_ls)
         if self.modify_freq == 0:
@@ -74,7 +80,7 @@ class Server(object):
         self.history = {
             # ID
             'worker_ID': [],
-            'global_commit_ID': [],  # count by server
+            'global_commit_ID': [], # count by server
             'local_commit_ID': [],  # count by worker
             'step_ID': [],
             'stage_ID': [],
@@ -119,25 +125,40 @@ class Server(object):
             if self.global_commit_ID == self.mini_epochs:
                 self.mission_complete = True
             if not self.mission_complete:
-                #### update parameter
-                pass
+                #### update parameter and global model
+                print(f'Update Global Model by Worker {rank} at Global Mini-Epoch {self.global_commit_ID}')
             return self.global_model.get_weights(), self.global_commit_ID, self.mission_complete
 
     def update_history(ps_rref, record):
         self = ps_rref.local_value()
-        with self.history_lock:
+        with self.global_model_lock and self.history_lock:
+            # update history
             record['commit_time'] = time.perf_counter() - self.start_time
-            #### update record to history
-            pass
+            for key, value in record.items():
+                self.history[key].append(value)
+            print(f'worker {record["worker_ID"]} commit at time {record["commit_time"]}')
+            # save tempfile
+            if self.args.temp and record['global_commit_ID'] in self.milestones:
+                self.save_tempfile()
 
-    def save_tempfile():
-        #### use "rpc_async" to call, by worker??
-        #### how to decide save tempfile??
-        pass
+    def save_tempfile(self):
+        # lock is held by update_history()
+        keras.models.save_model(self.global_model, f'{self.tempfile}_model')
+        np.save(f'{self.tempfile}.npy', self.history)
+        print(f'Save The Temporary Files at Global Mini-Epoch {self.global_commit_ID}')
 
-    def save_outfile():
-        #### use "rpc_sync" to call, by main.py
-        pass
+    def save_outfile(self):
+        # No lock is needed because training is complete
+        if self.args.save:
+            keras.models.save_model(self.global_model, f'{self.outfile}_model')
+            np.save(f'{self.outfile}.npy', self.history)
+            print(f'Save Model: {self.outfile}_model')
+            print(f'Save Logs: {self.outfile}.npy')
+        if self.args.temp:
+            shutil.rmtree(f'{self.tempfile}_model', ignore_errors=True)
+            if os.path.isfile(f'{self.tempfile}.npy'):
+                os.remove(f'{self.tempfile}.npy')
+            print('Clean The Temporary Files')
 
 # Worker
 class Worker(object):
@@ -208,6 +229,7 @@ class Worker(object):
             train_logs = self.model.fit(
                 self.dataloader['train'].take(math.ceil()),
                 #### tf.data.Dataset.take(# of batch = allocated data / total data)
+                #### case: cifar, imagenet; can be decided by args.dataset
                 verbose=self.verbose,
                 callbacks=[self.time_callback],
             )
@@ -231,25 +253,26 @@ class Worker(object):
                 verbose=self.verbose,
                 return_dict=True,
             )
+            # check mission_complete, if True, return
+            if mission_complete:
+                return
             # record
             record = {
                 # ID
                 'worker_ID': self.args.rank,
-                'global_commit_ID': global_commit_ID,  # count by server
-                'local_commit_ID': self.local_commit_ID,  # count by worker
+                'global_commit_ID': global_commit_ID,       # count by server
+                'local_commit_ID': self.local_commit_ID,    # count by worker
                 'step_ID': self.step_ID,
                 'stage_ID': self.stage_ID,
                 # train
-                'train_loss': train_logs.history['loss'],
-                'train_acc': train_logs.history['accuracy'],
-                'train_time': train_logs.history['t'],   # count from model.fit start
+                'train_loss': train_logs.history['loss'][0],
+                'train_acc': train_logs.history['accuracy'][0],
+                'train_time': train_logs.history['t'][0],   # count from model.fit start
                 # val
                 'val_loss': val_logs['loss'],
                 'val_acc': val_logs['accuracy'],
-                'commit_time': None,  # count from program start
+                'commit_time': None,    # count from program start
             }
             rpc.rpc_sync(self.ps_rref.owner(), Server.update_history, args=(self.ps_rref, record))
+            print(f'Worker {self.rank} Local Mini-Epoch {self.local_commit_ID} Complete')
             self.local_commit_ID += 1
-            # check mission_complete
-            if mission_complete:
-                return
