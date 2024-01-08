@@ -14,36 +14,32 @@ K. -W. Lu, P. Liu, D. -Y. Hong and J. -J. Wu, "Efficient Dual Batch Size Deep Le
 If you do not do this, the results can not be saved.
 
 ## Environment
-Build at 2023/11/16
+Build at 2024/01/07
 - python 3.11
-- tensorflow 2.13.*
-- torch
-- (Optional) keras-cv
-- (Optional) torchvision
+- tensorflow 2.13
+- pytorch 2.1
+- cuda 11.8
 
 ## Installation
 1. Create conda environment:
     ```
-    conda create -n DBSDL python=3.11
+    conda create -n ${ENV}
     ```
 2. Activate conda environment:
     ```
-    conda activate DBSDL
+    conda activate ${ENV}
     ```
 3. Install pip packages:
     - For just running programs:
         ```
-        pip install -U tensorflow==2.13.* torch
+        conda update --all -c pytorch -c nvidia python=3.11 tensorflow=2.13 pytorch pytorch-cuda=11.8
         ```
-    - For running programs, analyzing data, and others:
-        - for `jupyterlab`
-            ```
-            pip install -U tensorflow==2.13.* torch jupyterlab matplotlib scikit-learn keras-cv torchvision
-            ```
-        - for `nbclassic`
-            ```
-            pip install -U tensorflow==2.13.* torch nbclassic matplotlib scikit-learn keras-cv torchvision
-            ```
+    - For running programs, analysing data, and others:
+        ```
+        conda update --all -c pytorch -c nvidia python=3.11 tensorflow=2.13 pytorch pytorch-cuda=11.8 matplotlib scikit-learn keras-cv torchvision ${JUPYTER}
+        ```
+        - ${JUPYTER} could be `jupyterlab` or `nbclassic`
+    - Do not use `conda update --all` anymore, as package management issues can cause errors.
     - Others:
         - tensorflow 2.15 can not work, still trying now, `pip install -U tensorflow[and-cuda]==2.15.* torch`
 
@@ -78,7 +74,7 @@ Build at 2023/11/16
             - c.ServerApp.port = 8763
 
 ## Others
-- EZ quick start with `pip install -U tensorflow[and-cuda] torch torchvision`
+- suck pip, thank you conda
 - For tensorflow old version, try to use `imgaug` instead of `keras-cv` for doing image augmentation.
 
 ## ~~Too Old (Depricated)~~
