@@ -76,6 +76,29 @@ Build at 2024/01/07
 ## Others
 - suck pip, thank you conda
 - For tensorflow old version, try to use `imgaug` instead of `keras-cv` for doing image augmentation.
+- Dataset
+    - CIFAR
+        - objects classes: 10 / 100
+        - training images: 50000
+        - validation images: 10000
+    - ImageNet
+        - objects classes: 1000
+        - training images: 1281167
+        - validation images: 50000
+- Maximum Batch Size for GTX-1080
+    - CIFAR
+        - resolution_ls = [24, 32]
+        - batch_size_ls = [600, 570], for `--no-amp --no-xla`
+        - batch_size_ls = [2560, 1460], for `--no-amp --xla`
+    - ImageNet
+        - resolution_ls = [160, 224, 288]
+        - batch_size_ls = [340, 160, 140], for `--amp --no-xla`
+        - batch_size_ls = [1280, 620, 300], for `--amp --xla`
+    - Test Maximum Batch Size
+        - `python record_batchSize_trainTime.py -r=${RES} -d=${DATA} -p=/ssd --start=${TEST_BS} --stop=5001 --step=10000 -t=10 ${--amp --xla --no-save}`
+    - Record Training Time
+        - `--start=20 --step=20` with `--xla`, else `--start=10 --step=10`
+        - `python record_batchSize_trainTime.py -r= -d= -p=/ssd --start= --stop= --step= -t=10 ${--amp --xla}`
 
 ## ~~Too Old (Depricated)~~
 ### Environment

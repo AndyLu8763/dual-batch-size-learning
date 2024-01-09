@@ -1,5 +1,4 @@
 import itertools
-import math
 import os
 import shutil
 import threading
@@ -30,12 +29,12 @@ class Server(object):
         self.mini_epochs = self.epochs * args.world_size
         self.global_commit_ID = -1
         if args.dataset == 'cifar10' or args.dataset == 'cifar100': 
-            self.large_batch_size_ls = [1000, 500]
+            self.large_batch_size_ls = [] ####
             self.small_batch_size_ls = [] #### should be completed by the algorithm
             self.resolution_ls = [24, 32]
             self.dropout_rate_ls = [0.1, 0.2]
         elif args.dataset == 'imagenet':
-            self.large_batch_size_ls = [510, 360, 170]
+            self.large_batch_size_ls = [] ####
             self.small_batch_size_ls = [] #### should be completed by the algorithm
             self.resolution_ls = [160, 224, 288]
             self.dropout_rate_ls = [0.1, 0.2, 0.3]
@@ -227,7 +226,7 @@ class Worker(object):
             )
             # train
             train_logs = self.model.fit(
-                self.dataloader['train'].take(math.ceil()),
+                self.dataloader['train'].take(np.ceil()),
                 #### tf.data.Dataset.take(# of batch = allocated data / total data)
                 #### case: cifar, imagenet; can be decided by args.dataset
                 verbose=self.verbose,
