@@ -99,6 +99,19 @@ Build at 2024/01/07
     - Record Training Time
         - `--start=20 --step=20` with `--xla`, else `--start=10 --step=10`
         - `python record_batchSize_trainTime.py -r= -d= -p=/ssd --start= --stop= --step= -t=10 ${--amp --xla}`
+        - Try to use this:
+            ```
+            python record_batchSize_trainTime.py -r=24 -d=cifar100 --start=10 --stop=601 --step=10 -t=10 ;\
+            python record_batchSize_trainTime.py -r=32 -d=cifar100 --start=10 --stop=571 --step=10 -t=10 ;\
+            python record_batchSize_trainTime.py -r=24 -d=cifar100 --start=20 --stop=2561 --step=20 -t=10 --xla ;\
+            python record_batchSize_trainTime.py -r=32 -d=cifar100 --start=20 --stop=1461 --step=20 -t=10 --xla ;\
+            python record_batchSize_trainTime.py -r=160 -d=imagenet -p=/ssd --start=10 --stop=341 --step=10 -t=10 --amp ;\
+            python record_batchSize_trainTime.py -r=224 -d=imagenet -p=/ssd --start=10 --stop=161 --step=10 -t=10 --amp ;\
+            python record_batchSize_trainTime.py -r=288 -d=imagenet -p=/ssd --start=10 --stop=141 --step=10 -t=10 --amp ;\
+            python record_batchSize_trainTime.py -r=160 -d=imagenet -p=/ssd --start=20 --stop=1281 --step=20 -t=10 --amp --xla ;\
+            python record_batchSize_trainTime.py -r=224 -d=imagenet -p=/ssd --start=20 --stop=621 --step=20 -t=10 --amp --xla ;\
+            python record_batchSize_trainTime.py -r=288 -d=imagenet -p=/ssd --start=20 --stop=301 --step=20 -t=10 --amp --xla
+            ```
 
 ## ~~Too Old (Depricated)~~
 ### Environment

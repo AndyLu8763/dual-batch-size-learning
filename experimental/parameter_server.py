@@ -29,17 +29,28 @@ class Server(object):
         self.mini_epochs = self.epochs * args.world_size
         self.global_commit_ID = -1
         if args.dataset == 'cifar10' or args.dataset == 'cifar100': 
-            self.large_batch_size_ls = [] ####
-            self.small_batch_size_ls = [] #### should be completed by the algorithm
+            self.total_data_amount = 50000
+            self.large_data_amount_ls = [] if args.xla else [] #### should be completed by the algorithm
+            self.small_data_amount_ls = [] if args.xla else [] #### should be completed by the algorithm
+            self.large_batch_size_ls = [2560, 1460] if args.xla else [600, 570]
+            self.small_batch_size_ls = [] if args.xla else [] #### should be completed by the algorithm
             self.resolution_ls = [24, 32]
             self.dropout_rate_ls = [0.1, 0.2]
         elif args.dataset == 'imagenet':
-            self.large_batch_size_ls = [] ####
-            self.small_batch_size_ls = [] #### should be completed by the algorithm
+            self.total_data_amount = 1281167
+            if args.amp:
+                self.large_data_amount_ls = [] if args.xla else [] #### should be completed by the algorithm
+                self.small_data_amount_ls = [] if args.xla else [] #### should be completed by the algorithm
+                self.large_batch_size_ls = [1280, 620, 300] if args.xla else [340, 160, 140]
+                self.small_batch_size_ls = [] if args.xla else [] #### should be completed by the algorithm
+            else:
+                raise ValueError('The ImageNet training process only supports "--amp"')
             self.resolution_ls = [160, 224, 288]
             self.dropout_rate_ls = [0.1, 0.2, 0.3]
         else:
             raise ValueError(f'Invalid dataset "{args.dataset}".')
+        self.large_data_amount_iter = itertools.cycle(self.large_data_amount_ls)
+        self.small_data_amount_iter = itertools.cycle(self.small_data_amount_ls)
         self.large_batch_size_iter = itertools.cycle(self.large_batch_size_ls)
         self.small_batch_size_iter = itertools.cycle(self.small_batch_size_ls)
         self.resolution_iter = itertools.cycle(self.resolution_ls)
@@ -61,6 +72,9 @@ class Server(object):
             'weight_decay': 1e-4,
             'gamma': 0.1,
             # adaptive options
+            'total_data_amount': self.total_data_amount,
+            'large_data_amount': next(self.large_data_amount_iter),
+            'small_data_amount': next(self.small_data_amount_iter),
             'large_batch_size': next(self.large_batch_size_iter),
             'small_batch_size': next(self.small_batch_size_iter),
             'resolution': next(self.resolution_iter),
@@ -117,7 +131,7 @@ class Server(object):
         with self.global_model_lock:
             return self.global_model.get_weights()
 
-    def push_and_pull_model(ps_rref, worker_weights, rank, is_small_batch, local_commit_ID):
+    def push_and_pull_model(ps_rref, worker_weights, rank, is_small_batch, parameter):
         self = ps_rref.local_value()
         with self.parameter_lock and self.global_model_lock:
             self.global_commit_ID += 1
@@ -125,6 +139,14 @@ class Server(object):
                 self.mission_complete = True
             if not self.mission_complete:
                 #### update parameter and global model
+                server_weights = self.global_model.get_weights()
+                update_factor = parameter['small_data_amount'] / parameter['large_data_amount'] if is_small_batch else 1
+                for i in range(len(server_weights)):
+                    server_weights[i] = (
+                        (2 - update_factor) * server_weights[i] + update_factor * worker_weights[i]
+                    ) / 2
+                self.model.set_weights(server_weights)
+                ####
                 print(f'Update Global Model by Worker {rank} at Global Mini-Epoch {self.global_commit_ID}')
             return self.global_model.get_weights(), self.global_commit_ID, self.mission_complete
 
@@ -209,11 +231,10 @@ class Worker(object):
                     resolution=self.parameter['resolution'],
                     old_model=self.model if self.local_commit_ID != 0 else None,
                 )
-                # set model weights first time
-                if self.local_commit_ID == 0:
-                    self.model.set_weights(
-                        rpc.rpc_sync(self.ps_rref.owner(), Server.get_global_model_weights, args=(self.ps_rref))
-                    )
+            # set model weights
+            self.model.set_weights(
+                rpc.rpc_sync(self.ps_rref.owner(), Server.get_global_model_weights, args=(self.ps_rref))
+            )
             # compile model
             self.model.compile(
                 optimizer=keras.optimizers.experimental.SGD(
@@ -226,9 +247,12 @@ class Worker(object):
             )
             # train
             train_logs = self.model.fit(
-                self.dataloader['train'].take(np.ceil()),
-                #### tf.data.Dataset.take(# of batch = allocated data / total data)
-                #### case: cifar, imagenet; can be decided by args.dataset
+                self.dataloader['train'].take(
+                    np.ceil(self.parameter['total_data_amount'] / (
+                        self.parameter['small_data_amount'] if self.is_small_batch
+                        else self.parameter['large_data_amount']
+                    )
+                )),
                 verbose=self.verbose,
                 callbacks=[self.time_callback],
             )
@@ -242,7 +266,7 @@ class Worker(object):
                     self.model.get_weights(),
                     self.args.rank,
                     self.is_small_batch,
-                    self.local_commit_ID,
+                    self.parameter,
                 ),
             )
             self.model.set_weights(global_model_weights)
