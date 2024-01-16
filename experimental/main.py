@@ -10,8 +10,7 @@ import parameter_server
 
 
 # parser
-## three parts: ['RPC_setting', 'high_level_control_options', 'low_level_control_options']
-## 'low_level_control_options' is located in 'parameter_server.py'
+## python main.py -r= -w=2 -s=0 -a=140.112.31.196 -d=cifar100 -p=/ssd -t=1 --amp --xla --no-temp --no-save
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.MetavarTypeHelpFormatter):
     pass
 parser = argparse.ArgumentParser(
@@ -19,8 +18,8 @@ parser = argparse.ArgumentParser(
     epilog=(
         'The parser only supports high-level control options. '
         'If the user wants to adjust low-level control options, modify the code. '
-        'Required settings [--rank, --world-size, --num-small, --server-addr, --dataset, --dir-path] '
-        'or [-r, -w, -s, -a, -d, -p], '
+        'Required settings [--rank, --world-size, --num-small, --server-addr, --dataset, --dir-path, --time-ratio] '
+        'or [-r, -w, -s, -a, -d, -p, -t], '
         'optional settings [--amp, --xla, --depth, --server-port, --no-cycle, --no-temp, --no-save].'
     ),
     formatter_class=CustomFormatter,
@@ -41,7 +40,7 @@ parser.add_argument(
     dest='small',
     default=0,
     type=int,
-    help='number of small-batch workers in the process, the default is "0"',
+    help='number of small-batch workers in the process, default is "0"',
 )
 parser.add_argument(
     '--server-addr', '--addr', '-a',
@@ -54,9 +53,15 @@ parser.add_argument(
     dest='port',
     default='48763',
     type=str,
-    help='the port that the master listens to, the default is "48763"',
+    help='the port that the master listens to, default is "48763"',
 )
-## high-level control options
+parser.add_argument(
+    '--device-index',
+    type=int,
+    default=0,
+    help='the index of the GPU used to run the program, "0" or "-1" is a good choice',
+)
+## data and model
 parser.add_argument(
     '--dataset', '--data', '-d',
     type=str,
@@ -67,6 +72,21 @@ parser.add_argument(
     type=str,
     help='path to the dataset directory',
 )
+parser.add_argument(
+    '--depth',
+    type=int,
+    default=18,
+    help='resnet depth, currently supports [18, 34] , should modify intercept_ and coef_ in "parameter_server.py" if the value is not "18"',
+)
+## experimant: intercept, coefficient, and permitted extra training time
+parser.add_argument(
+    '--additional-time-ratio', '--time-ratio', '--ratio', '-t',
+    dest='time_ratio',
+    type=float,
+    default=1,
+    help='ratio of additional training time allowed to original training time',
+)
+## optimization options
 parser.add_argument(
     '--mixed-precision', '--amp',
     dest='amp',
@@ -79,22 +99,11 @@ parser.add_argument(
     action='store_true',
     help='train with jit compile (xla)',
 )
+## output files setting
 parser.add_argument(
     '--comments', '-c',
     type=str,
     help='add additional comments on filename',
-)
-parser.add_argument(
-    '--device-index',
-    type=int,
-    default=0,
-    help='the index of the GPU used to run the program, "0" or "-1" is a good choice',
-)
-parser.add_argument(
-    '--depth',
-    type=int,
-    default=18,
-    help='resnet depth, currently supports [18, 34]',
 )
 parser.add_argument(
     '--no-cycle',
@@ -125,15 +134,15 @@ def run_server(args):
             rpc.rpc_async(
                 f'worker_{i}',
                 run_worker,
-                args=(args, ps_rref, i, True if i <= args.small else False),
+                args=(ps_rref, args, i, True if i <= args.small else False),
             )
         )
     torch.futures.wait_all(future_list)
-    ps_rref.rpc_sync().save_history()
+    ps_rref.rpc_sync().save_outfile()
     print('Complete, End Program')
 
-def run_worker(args, ps_rref, rank, is_small_batch):
-    worker = parameter_server.Worker(args, ps_rref, rank, is_small_batch)
+def run_worker(ps_rref, args, rank, is_small_batch):
+    worker = parameter_server.Worker(ps_rref, args, rank, is_small_batch)
     worker.train()
     print(f'Worker {rank} Training Complete')
 
@@ -178,7 +187,6 @@ def main():
     print(f'Using Devices: {tf.config.get_visible_devices("GPU")}')
     print('----')
 
-    """
     # RPC
     backend_options = rpc.TensorPipeRpcBackendOptions(
         init_method=f'tcp://{args.addr}:{args.port}',
@@ -201,12 +209,11 @@ def main():
             rpc_backend_options=backend_options,
         )
     rpc.shutdown()
-    """
 
 
 if __name__ == '__main__':
     # args:
-    # [rank, world_size, small, addr, port,
+    # [rank, world_size, small, addr, port, time_ratio,
     #  dataset, dir_path, amp, xla, comments,
     #  device_index, depth, cycle, temp, save]
     main()
