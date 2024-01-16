@@ -18,7 +18,7 @@ Build at 2024/01/07
 - python 3.11
 - tensorflow 2.13
 - pytorch 2.1
-- cuda 11.8
+- pytorch-cuda 12.1
 
 ## Installation
 1. Create conda environment:
@@ -32,11 +32,11 @@ Build at 2024/01/07
 3. Install pip packages:
     - For just running programs:
         ```
-        conda update --all -c pytorch -c nvidia python=3.11 tensorflow=2.13 pytorch pytorch-cuda=11.8
+        conda update --all -c pytorch -c nvidia python=3.11 tensorflow=2.13 pytorch pytorch-cuda=12.1
         ```
     - For running programs, analysing data, and others:
         ```
-        conda update --all -c pytorch -c nvidia python=3.11 tensorflow=2.13 pytorch pytorch-cuda=11.8 matplotlib scikit-learn keras-cv torchvision ${JUPYTER}
+        conda update --all -c pytorch -c nvidia python=3.11 tensorflow=2.13 pytorch pytorch-cuda=12.1 matplotlib scikit-learn keras-cv torchvision ${JUPYTER}
         ```
         - ${JUPYTER} could be `jupyterlab` or `nbclassic`
     - Do not use `conda update --all` anymore, as package management issues can cause errors.

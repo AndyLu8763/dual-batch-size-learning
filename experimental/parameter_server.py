@@ -96,7 +96,7 @@ class Server(object):
         }
         self.outfile = (
             f'{args.dataset}_resnet{args.depth}_{self.epochs}'
-            f'_W{args.world_size}S{args.small}'
+            f'_w{args.world_size}s{args.small}'
             f'{"_amp" if args.amp else ""}'
             f'{"_xla" if args.xla else ""}'
             f'{"" if args.cycle else "_noCycle"}'
@@ -139,6 +139,7 @@ class Server(object):
             if self.global_commit_ID == self.mini_epochs:
                 self.mission_complete = True
             if not self.mission_complete:
+                #### start
                 #### update parameter and global model
                 server_weights = self.global_model.get_weights()
                 update_factor = parameter['small_data_amount'] / parameter['large_data_amount'] if is_small_batch else 1
@@ -146,8 +147,9 @@ class Server(object):
                     server_weights[i] = (
                         (2 - update_factor) * server_weights[i] + update_factor * worker_weights[i]
                     ) / 2
-                self.model.set_weights(server_weights)
-                ####
+                self.global_model.set_weights(server_weights)
+                #### iter next not complete yet
+                #### end
                 print(f'Update Global Model by Worker {rank} at Global Mini-Epoch {self.global_commit_ID}')
             return self.global_model.get_weights(), self.global_commit_ID, self.mission_complete
 
@@ -212,7 +214,7 @@ class Worker(object):
         # get mission_complete
         while True:
             # get parameter
-            self.parameter = rpc.rpc_sync(self.ps_rref.owner(), Server.get_parameter, args=(self.ps_rref))
+            self.parameter = rpc.rpc_sync(self.ps_rref.owner(), Server.get_parameter, kwargs={'ps_rref': self.ps_rref})
             # check if parameter is modified
             if self.step_ID != self.parameter['global_step_ID'] or self.stage_ID != self.parameter['global_stage_ID']:
                 self.step_ID = self.parameter['global_step_ID']
@@ -234,7 +236,7 @@ class Worker(object):
                 )
             # set model weights
             self.model.set_weights(
-                rpc.rpc_sync(self.ps_rref.owner(), Server.get_global_model_weights, args=(self.ps_rref))
+                rpc.rpc_sync(self.ps_rref.owner(), Server.get_global_model_weights, kwargs={'ps_rref': self.ps_rref})
             )
             # compile model
             self.model.compile(
@@ -260,13 +262,13 @@ class Worker(object):
             global_model_weights, global_commit_ID, mission_complete = rpc.rpc_sync(
                 self.ps_rref.owner(),
                 Server.push_and_pull_model,
-                args=(
-                    self.ps_rref,
-                    self.model.get_weights(),
-                    self.args.rank,
-                    self.is_small_batch,
-                    self.parameter,
-                ),
+                kwargs={
+                    'ps_rref': self.ps_rref,
+                    'worker_weights': self.model.get_weights(),
+                    'rank': self.args.rank,
+                    'is_small_batch': self.is_small_batch,
+                    'parameter': self.parameter,
+                },
             )
             self.model.set_weights(global_model_weights)
             # val
@@ -295,6 +297,6 @@ class Worker(object):
                 'val_acc': val_logs['accuracy'],
                 'commit_time': None,    # count from program start
             }
-            rpc.rpc_sync(self.ps_rref.owner(), Server.update_history, args=(self.ps_rref, record))
+            rpc.rpc_sync(self.ps_rref.owner(), Server.update_history, kwargs={'ps_rref': self.ps_rref, 'record': record})
             print(f'Worker {self.rank} Local Mini-Epoch {self.local_commit_ID} Complete')
             self.local_commit_ID += 1

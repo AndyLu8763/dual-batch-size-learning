@@ -10,7 +10,7 @@ import parameter_server
 
 
 # parser
-## python main.py -r= -w=2 -s=0 -a=140.112.31.196 -d=cifar100 -p=/ssd -t=1 --amp --xla --no-temp --no-save
+## testing: python main.py -r= -w=2 -s=0 -a=140.112.31.196 -d=cifar100 -p=/ssd -t=1 --amp --no-temp --no-save
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.MetavarTypeHelpFormatter):
     pass
 parser = argparse.ArgumentParser(
@@ -128,6 +128,7 @@ parser.add_argument(
 # running server && worker
 def run_server(args):
     ps_rref = rpc.RRef(parameter_server.Server(args))
+    print('========', 'ps_rref:', ps_rref, '========')
     future_list = []
     for i in range(1, args.world_size):
         future_list.append(
@@ -142,6 +143,7 @@ def run_server(args):
     print('Complete, End Program')
 
 def run_worker(ps_rref, args, rank, is_small_batch):
+    print('========', 'ps_rref.owner():', ps_rref.owner(), '========')
     worker = parameter_server.Worker(ps_rref, args, rank, is_small_batch)
     worker.train()
     print(f'Worker {rank} Training Complete')
@@ -190,6 +192,7 @@ def main():
     # RPC
     backend_options = rpc.TensorPipeRpcBackendOptions(
         init_method=f'tcp://{args.addr}:{args.port}',
+        rpc_timeout=86400, # important, the maximum exist time of the program
     )
     if args.rank == 0:  # server
         print(f'Server {args.rank} initializing RPC')
