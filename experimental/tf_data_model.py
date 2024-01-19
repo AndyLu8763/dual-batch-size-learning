@@ -21,7 +21,7 @@ cifar_resolution_list = [16, 24, 32]
 imagenet_resolution_list = [160, 224, 288]
 
 
-def load_cifar(resolution: int, batch_size: int, dataset: str):
+def load_cifar(resolution: int, batch_size: int, dataset: str, val_batch_size: int):
     if resolution not in cifar_resolution_list:
         raise ValueError(f'Invalid resolution "{resolution}", it should be in {cifar_resolution_list}.')
     if dataset not in cifar_dataset_list:
@@ -56,7 +56,7 @@ def load_cifar(resolution: int, batch_size: int, dataset: str):
                 lambda x, y: (preprocessing_map(x), y),
                 num_parallel_calls=tf.data.AUTOTUNE
             )
-            .batch(batch_size=batch_size)
+            .batch(batch_size=val_batch_size)
             .cache()
             .prefetch(buffer_size=tf.data.AUTOTUNE)
         )
@@ -65,7 +65,7 @@ def load_cifar(resolution: int, batch_size: int, dataset: str):
     return dataloader
 
 
-def load_imagenet(resolution: int, batch_size: int, dir_path: str):
+def load_imagenet(resolution: int, batch_size: int, dir_path: str, val_batch_size: int):
     if resolution not in imagenet_resolution_list:
         raise ValueError(f'Invalid resolution "{resolution}", it should be in {imagenet_resolution_list}.')
     
@@ -105,7 +105,7 @@ def load_imagenet(resolution: int, batch_size: int, dir_path: str):
             keras.utils.image_dataset_from_directory(
                 directory=f'{dir_path}/imagenet/val',
                 label_mode='int', # for keras.losses.SparseCategoricalCrossentropy()
-                batch_size=batch_size,
+                batch_size=val_batch_size,
                 image_size=(resolution, resolution),
                 shuffle=False
             )
@@ -240,14 +240,17 @@ def load_data(
     resolution: int,
     batch_size: int,
     dataset: str,
-    dir_path: Optional[str] = None
+    dir_path: Optional[str] = None,
+    val_batch_size: Optional[int] = None
 ):
+    if val_batch_size == None:
+        val_batch_size = batch_size
     if 'cifar' in dataset:
-        return load_cifar(resolution=resolution, batch_size=batch_size, dataset=dataset)
+        return load_cifar(resolution=resolution, batch_size=batch_size, dataset=dataset, val_batch_size=val_batch_size)
     elif dataset == 'imagenet':
         if dir_path == None:
             raise ValueError(f'Invalid directory path "{dir_path}".')
-        return load_imagenet(resolution=resolution, batch_size=batch_size, dir_path=dir_path)
+        return load_imagenet(resolution=resolution, batch_size=batch_size, dir_path=dir_path, val_batch_size=val_batch_size)
     else:
         raise ValueError(f'Invalid dataset "{dataset}", it should be in {dataset_list}.')
 

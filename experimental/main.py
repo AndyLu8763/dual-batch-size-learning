@@ -10,7 +10,8 @@ import parameter_server
 
 
 # parser
-## testing: python main.py -r= -w=2 -s=0 -a=140.112.31.196 -d=cifar100 -p=/ssd -t=1 --amp --no-temp --no-save
+## testing 1: clear; python main.py -r= -w=2 -s=0 -a=140.112.31.196 -d=cifar100 -p=/ssd -t=1.01 --amp --no-save
+## testing 2: clear; python main.py -r= --device-index= -w=6 -s=2 -a=140.112.31.196 -d=cifar100 -p=/ssd -t=1.01 --amp --no-save
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.MetavarTypeHelpFormatter):
     pass
 parser = argparse.ArgumentParser(
@@ -20,7 +21,7 @@ parser = argparse.ArgumentParser(
         'If the user wants to adjust low-level control options, modify the code. '
         'Required settings [--rank, --world-size, --num-small, --server-addr, --dataset, --dir-path, --time-ratio] '
         'or [-r, -w, -s, -a, -d, -p, -t], '
-        'optional settings [--amp, --xla, --depth, --server-port, --no-cycle, --no-temp, --no-save].'
+        'optional settings [--amp, --xla, --depth, --server-port, --no-cycle, --temp, --no-save].'
     ),
     formatter_class=CustomFormatter,
 )
@@ -112,9 +113,9 @@ parser.add_argument(
     help='do not use all image resolutions with different learning rates',
 )
 parser.add_argument(
-    '--no-temp',
+    '--temp',
     dest='temp',
-    action='store_false',
+    action='store_true',
     help='do not save the temporary files during training, including "_model" and ".npy"',
 )
 parser.add_argument(
@@ -128,7 +129,6 @@ parser.add_argument(
 # running server && worker
 def run_server(args):
     ps_rref = rpc.RRef(parameter_server.Server(args))
-    print('========', 'ps_rref:', ps_rref, '========')
     future_list = []
     for i in range(1, args.world_size):
         future_list.append(
@@ -143,7 +143,6 @@ def run_server(args):
     print('Complete, End Program')
 
 def run_worker(ps_rref, args, rank, is_small_batch):
-    print('========', 'ps_rref.owner():', ps_rref.owner(), '========')
     worker = parameter_server.Worker(ps_rref, args, rank, is_small_batch)
     worker.train()
     print(f'Worker {rank} Training Complete')

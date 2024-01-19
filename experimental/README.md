@@ -29,7 +29,7 @@ Build at 2024/01/07
     ```
     conda activate ${ENV}
     ```
-3. Install pip packages:
+3. Install packages:
     - For just running programs:
         ```
         conda update --all -c pytorch -c nvidia python=3.11 tensorflow=2.13 pytorch pytorch-cuda=12.1
@@ -74,6 +74,7 @@ Build at 2024/01/07
             - c.ServerApp.port = 8763
 
 ## Others
+- conda create -n tf213 -c pytorch -c nvidia python=3.11 tensorflow=2.13 pytorch pytorch-cuda=12.1
 - suck pip, thank you conda
 - For tensorflow old version, try to use `imgaug` instead of `keras-cv` for doing image augmentation.
 - Dataset
