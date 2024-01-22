@@ -19,7 +19,7 @@ class Server(object):
         self.mission_complete = False
         # training parameters 1
         self.parameter_lock = threading.Lock()
-        self.epochs = 90
+        self.epochs = 140 if 'cifar' in args.dataset else 105
         self.steps = 3
         self.mini_epochs = self.epochs * (args.world_size - 1)
         self.global_commit_ID = 0
@@ -57,6 +57,7 @@ class Server(object):
         self.large_data_amount, self.small_data_amount, self.small_batch_size_ls = self.get_large_small_dataAmount_batchSize()
         # iter and cycles milestones
         ## milestones
+        '''
         self.iter_milestones = list(
             self.mini_epochs // self.steps * i
             for i in range(1, self.steps + 1)
@@ -65,10 +66,20 @@ class Server(object):
             self.mini_epochs // (self.steps * len(self.resolution_ls)) * i
             for i in range(1, self.steps * len(self.resolution_ls) + 1)
         )
+        '''
+        self.iter_milestones = np.array(
+            [80, 120, 140] if 'cifar' in args.dataset
+            else [60, 90, 105]
+        ) * (args.world_size - 1)
+        self.cycle_milestones = np.array(
+            [40, 80, 100, 120, 130, 140] if 'cifar' in args.dataset
+            else [20, 40, 60, 70, 80, 90, 95, 100, 105]
+        ) * (args.world_size - 1)
+        ####'''
         ## modified by iter_milestones [30, 60, 90]
         ### (+1) for preventing iter overflow
         self.global_step_ID_iter = iter(list(range(0, self.steps + 1)))
-        self.learning_rate_iter = iter(list(1e-1 * 0.1 ** i for i in range(0, self.steps + 1)))
+        self.learning_rate_iter = iter(list(2e-1 * 0.1 ** i for i in range(0, self.steps + 1)))
         print('================')
         print(f'iter_milestones: {self.iter_milestones}')
         print(f'cycle_milestones: {self.cycle_milestones}')
@@ -197,7 +208,7 @@ class Server(object):
 
     def update_history(ps_rref, record):
         self = ps_rref.local_value()
-        with self.global_model_lock and self.history_lock:
+        with self.history_lock:
             # record commit time
             record['commit_time'] = time.perf_counter() - self.start_time
             # check global commit ID and update record
@@ -208,10 +219,12 @@ class Server(object):
                     f'worker {record["worker_ID"]} commit,',
                     f'ID: {record["global_commit_ID"]},',
                     f'time: {round(record["commit_time"], 3)},',
+                    f'loss: {round(record["val_loss"], 3)},',
                     f'acc: {round(record["val_acc"] * 100, 1)}%'
                 )
-            # save tempfile
-            if self.args.temp and record['global_commit_ID'] + 1 in self.iter_milestones:
+        # save tempfile
+        if self.args.temp and record['global_commit_ID'] + 1 in self.iter_milestones:
+            with self.global_model_lock:
                 self.save_tempfile(record['global_commit_ID'])
 
     def save_tempfile(self, temp_commit_ID):
@@ -286,26 +299,27 @@ class Worker(object):
                     resolution=self.parameter['resolution'],
                     old_model=self.model if self.local_commit_ID != 0 else None,
                 )
+                # compile model
+                self.model.compile(
+                    optimizer=keras.optimizers.experimental.SGD(
+                        learning_rate=self.parameter['learning_rate'],
+                        momentum=self.parameter['momentum'],
+                        weight_decay=self.parameter['weight_decay'],
+                    ),
+                    loss=keras.losses.SparseCategoricalCrossentropy(),
+                    metrics=['accuracy'],
+                )
             # set model weights
             self.model.set_weights(
                 rpc.rpc_sync(self.ps_rref.owner(), Server.get_global_model_weights, kwargs={'ps_rref': self.ps_rref})
-            )
-            # compile model
-            self.model.compile(
-                optimizer=keras.optimizers.experimental.SGD(
-                    learning_rate=self.parameter['learning_rate'],
-                    momentum=self.parameter['momentum'],
-                    weight_decay=self.parameter['weight_decay'],
-                ),
-                loss=keras.losses.SparseCategoricalCrossentropy(),
-                metrics=['accuracy'],
             )
             # print training summary message
             print('----')
             print(f'Local Mini-Epoch {self.local_commit_ID}, Step {self.step_ID}, Stage {self.stage_ID}')
             print(
                 f'Resolution {self.parameter["resolution"]},',
-                f'BatchSize {self.parameter["small_batch_size"] if self.is_small_batch else self.parameter["large_batch_size"]}'
+                f'LR {self.parameter["learning_rate"]: g},',
+                f'BS {self.parameter["small_batch_size"] if self.is_small_batch else self.parameter["large_batch_size"]}'
             )
             # train
             train_logs = self.model.fit(

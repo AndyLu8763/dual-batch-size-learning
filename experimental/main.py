@@ -6,12 +6,13 @@ from tensorflow import keras
 import torch
 from torch.distributed import rpc
 
-import parameter_server
+import parameter_server as ps
 
 
 # parser
-## testing 1: clear; python main.py -r= -w=2 -s=0 -a=140.112.31.196 -d=cifar100 -p=/ssd -t=1.01 --amp --no-save
-## testing 2: clear; python main.py -r= --device-index= -w=6 -s=2 -a=140.112.31.196 -d=cifar100 -p=/ssd -t=1.01 --amp --no-save
+## testing 1: clear; python main.py -r= -w=2 -s=0 -a=140.112.31.196 -d=cifar100 -t=1.05 --amp --no-save
+## testing 2: clear; python main.py -r= --device-index= -w=6 -s=0 -a=140.112.31.196 -d=cifar100 -t=1.05 --amp --no-save
+## testing 3: clear; python main.py -r= --device-index= -w=6 -s=0 -a=140.112.31.196 -d=imagenet -p=/ssd -t=1.05 --amp --xla --no-save
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.MetavarTypeHelpFormatter):
     pass
 parser = argparse.ArgumentParser(
@@ -128,7 +129,7 @@ parser.add_argument(
 
 # running server && worker
 def run_server(args):
-    ps_rref = rpc.RRef(parameter_server.Server(args))
+    ps_rref = rpc.RRef(ps.Server(args))
     future_list = []
     for i in range(1, args.world_size):
         future_list.append(
@@ -143,7 +144,7 @@ def run_server(args):
     print('Complete, End Program')
 
 def run_worker(ps_rref, args, rank, is_small_batch):
-    worker = parameter_server.Worker(ps_rref, args, rank, is_small_batch)
+    worker = ps.Worker(ps_rref, args, rank, is_small_batch)
     worker.train()
     print(f'Worker {rank} Training Complete')
 
