@@ -6,7 +6,7 @@ from tensorflow import keras
 import torch
 from torch.distributed import rpc
 
-import parameter_server as ps
+import parameter_server_conf as ps
 
 
 # command

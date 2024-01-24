@@ -26,32 +26,32 @@ class Server(object):
         if args.dataset == 'cifar10' or args.dataset == 'cifar100':
             self.total_data_amount = 50000
             self.intercept_ls = (
-                [0.00669587700416735, 0.010769692695705546] if args.xla
-                else [0.01748355855302361, 0.018174712366753637]
+                [0.00669587700416735] if args.xla
+                else [0.01748355855302361]
             )
             self.coef_ls = (
-                [0.000325070055313371, 0.00045254396224656614] if args.xla
-                else [0.00036181042716526004, 0.0005055768285404]
+                [0.000325070055313371] if args.xla
+                else [0.00036181042716526004]
             )
-            self.large_batch_size_ls = [2560, 1460] if args.xla else [600, 570]
-            self.resolution_ls = [24, 32]
-            self.dropout_rate_ls = [0.1, 0.2]
+            self.large_batch_size_ls = [1460] if args.xla else [570]
+            self.resolution_ls = [32]
+            self.dropout_rate_ls = [0.2]
         elif args.dataset == 'imagenet':
             self.total_data_amount = 1281167
             if args.amp:
                 self.intercept_ls = (
-                    [0.005357090139827214, 0.015084276167305788, 0.013815540081899336] if args.xla
-                    else [0.01286918090689787, 0.01654844854797155, 0.013245930411050433]
+                    [0.013815540081899336] if args.xla
+                    else [0.013245930411050433]
                 )
                 self.coef_ls = (
-                    [0.001584763317361175, 0.002446198152606714, 0.003958850089352455] if args.xla
-                    else [0.0016273078905029127, 0.0025862208882727975, 0.004203924445708112]
+                    [0.003958850089352455] if args.xla
+                    else [0.004203924445708112]
                 )
-                self.large_batch_size_ls = [1280, 620, 300] if args.xla else [340, 160, 140]
+                self.large_batch_size_ls = [300] if args.xla else [140]
             else:
                 raise ValueError('The ImageNet training process only supports "--amp"')
-            self.resolution_ls = [160, 224, 288]
-            self.dropout_rate_ls = [0.1, 0.2, 0.3]
+            self.resolution_ls = [288]
+            self.dropout_rate_ls = [0.3]
         else:
             raise ValueError(f'Invalid dataset "{args.dataset}".')
         self.large_data_amount, self.small_data_amount, self.small_batch_size_ls = self.get_large_small_dataAmount_batchSize()
@@ -72,8 +72,8 @@ class Server(object):
             else [60, 90, 105]
         ) * (args.world_size - 1)
         self.cycle_milestones = np.array(
-            [40, 80, 100, 120, 130, 140] if 'cifar' in args.dataset
-            else [20, 40, 60, 70, 80, 90, 95, 100, 105]
+            [80, 120, 140] if 'cifar' in args.dataset
+            else [60, 90, 105]
         ) * (args.world_size - 1)
         ####'''
         ## modified by iter_milestones [30, 60, 90]
@@ -134,6 +134,7 @@ class Server(object):
             'commit_time': [],  # count from program start
         }
         self.outfile = (
+            'conf_'
             f'{args.dataset}_resnet{args.depth}_{self.epochs}'
             f'_w{args.world_size}s{args.small}'
             f'{"_amp" if args.amp else ""}'
