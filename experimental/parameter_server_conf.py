@@ -26,28 +26,28 @@ class Server(object):
         if args.dataset == 'cifar10' or args.dataset == 'cifar100':
             self.total_data_amount = 50000
             self.intercept_ls = (
-                [0.00669587700416735] if args.xla
-                else [0.01748355855302361]
+                [0.012992225216649333] if args.xla
+                else [0.015562114074817612]
             )
             self.coef_ls = (
-                [0.000325070055313371] if args.xla
-                else [0.00036181042716526004]
+                [0.0004375558540115719] if args.xla
+                else [0.0005056358858583448]
             )
-            self.large_batch_size_ls = [1460] if args.xla else [570]
+            self.large_batch_size_ls = [580] if args.xla else [560]
             self.resolution_ls = [32]
             self.dropout_rate_ls = [0.2]
         elif args.dataset == 'imagenet':
             self.total_data_amount = 1281167
             if args.amp:
                 self.intercept_ls = (
-                    [0.013815540081899336] if args.xla
-                    else [0.013245930411050433]
+                    [0.018043916986409725] if args.xla
+                    else [0.01671498578312]
                 )
                 self.coef_ls = (
-                    [0.003958850089352455] if args.xla
-                    else [0.004203924445708112]
+                    [0.0033721353848625833] if args.xla
+                    else [0.003597636716980907]
                 )
-                self.large_batch_size_ls = [300] if args.xla else [140]
+                self.large_batch_size_ls = [100] if args.xla else [100]
             else:
                 raise ValueError('The ImageNet training process only supports "--amp"')
             self.resolution_ls = [288]
@@ -135,7 +135,8 @@ class Server(object):
         }
         self.outfile = (
             'conf_'
-            f'{args.dataset}_resnet{args.depth}_{self.epochs}'
+            f'{args.dataset}_resnet{args.depth}_e{self.epochs}'
+            f'_t{("%.2f" % args.time_ratio).replace(".", "")}'
             f'_w{args.world_size}s{args.small}'
             f'{"_amp" if args.amp else ""}'
             f'{"_xla" if args.xla else ""}'

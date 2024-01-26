@@ -196,7 +196,7 @@ def main():
     # RPC
     backend_options = rpc.TensorPipeRpcBackendOptions(
         init_method=f'tcp://{args.addr}:{args.port}',
-        rpc_timeout=86400, # important, the maximum exist time of the program
+        rpc_timeout=60*60*24*7, # important, the maximum exist time of the program, set to be 1 week
     )
     if args.rank == 0:  # server
         print(f'Server {args.rank} initializing RPC')
