@@ -42,6 +42,11 @@ Build at 2024/01/07
     - Do not use `conda update --all` anymore, as package management issues can cause errors.
     - Others:
         - tensorflow 2.15 can not work, still trying now, `pip install -U tensorflow[and-cuda]==2.15.* torch`
+4. others:
+    - quick start:
+        ```
+        conda create -n ${ENV} -c pytorch -c nvidia python=3.11 tensorflow=2.13 pytorch pytorch-cuda=12.1
+        ```
 
 ## Jupyter Remote Setting
 - packages: `jupyterlab`, `notebook`, `nbclassic`
@@ -89,11 +94,11 @@ Build at 2024/01/07
 - Maximum Batch Size for GTX-1080
     - CIFAR
         - resolution_ls = [24, 32]
-        - batch_size_ls = [600, 560], for `--no-amp --no-xla`
-        - batch_size_ls = [430, 580], for `--no-amp --xla`
+        - batch_size_ls = [600, 560]
+        - batch_size_ls = [430, 580], for `--xla`
     - ImageNet
         - resolution_ls = [160, 224, 288]
-        - batch_size_ls = [340, 170, 100], for `--amp --no-xla`
+        - batch_size_ls = [340, 170, 100], for `--amp`
         - batch_size_ls = [550, 160, 100], for `--amp --xla`
 - Test Maximum Batch Size
     - `python record_batchSize_trainTime.py -r=${RES} -d=${DATA} -p=/ssd --start=${TEST_BS} --stop=5001 --step=10000 -t=10 ${--amp --xla --no-save}`
@@ -106,47 +111,37 @@ Build at 2024/01/07
     - ex.
         - for server, `python main.py -r=0 -w=2 -s=0 -a=192.168.0.1 -d=cifar100 -p=/ssd -t=1.05`
         - for worker, `python main.py -r=1 -w=2 -s=0 -a=192.168.0.1 -d=cifar100 -p=/ssd -t=1.05`
-- Temp
-python record_batchSize_trainTime.py -r=24 -d=cifar100 -p=/ssd --start=5 --stop=601 --step=5 -t=50 ;\
-python record_batchSize_trainTime.py -r=24 -d=cifar100 -p=/ssd --start=5 --stop=431 --step=5 -t=50 --xla ;\
-python record_batchSize_trainTime.py -r=32 -d=cifar100 -p=/ssd --start=5 --stop=561 --step=5 -t=50 ;\
-python record_batchSize_trainTime.py -r=32 -d=cifar100 -p=/ssd --start=5 --stop=581 --step=5 -t=50 --xla ;\
-python record_batchSize_trainTime.py -r=160 -d=imagenet -p=/ssd --start=5 --stop=341 --step=5 -t=50 --amp ;\
-python record_batchSize_trainTime.py -r=160 -d=imagenet -p=/ssd --start=5 --stop=551 --step=5 -t=50 --amp --xla ;\
-python record_batchSize_trainTime.py -r=224 -d=imagenet -p=/ssd --start=5 --stop=171 --step=5 -t=50 --amp ;\
-python record_batchSize_trainTime.py -r=224 -d=imagenet -p=/ssd --start=5 --stop=161 --step=5 -t=50 --amp --xla ;\
-python record_batchSize_trainTime.py -r=288 -d=imagenet -p=/ssd --start=5 --stop=101 --step=5 -t=50 --amp ;\
-python record_batchSize_trainTime.py -r=288 -d=imagenet -p=/ssd --start=5 --stop=101 --step=5 -t=50 --amp --xla
+- RTX-3090 imagenet setting
+    - gpu10 as server, gpu06/07/08/14 as workers
+    - ImageNet
+        - test max BS
+            - `vim ~/parameter_server_conf.py`
+            - `cp ~/parameter_server_conf.py .`
+            - `python main_conf.py -r= -w=2 -s=0 -a=140.109.23.231 -d=imagenet -p=/data -t=1.05 --amp --xla`
+            - resolution_ls = [160, 224, 288]
+            - batch_size_ls = [2330, 1110, 740], for `--amp`
+            - batch_size_ls = [2800, 1400, 900], for `--amp --xla` ~~[660, 990, 560] with no diff ERROR but mem not full~~
+            - for `--amp --xla`
+                - intercept_ls = [5.683134939754586e-05, 0.01073572758256125, 0.010680175780982126]
+                - coef_ls = [0.00025895413494090355, 0.00045862692849402506, 0.0007576280737663753]
+        - record BS train time
+            - `--amp`
+            ```
+            python record_batchSize_trainTime.py -r=160 -d=imagenet -p=/data --start=10 --stop=2331 --step=10 -t=50 --amp ;\
+            python record_batchSize_trainTime.py -r=224 -d=imagenet -p=/data --start=10 --stop=1111 --step=10 -t=50 --amp ;\
+            python record_batchSize_trainTime.py -r=288 -d=imagenet -p=/data --start=10 --stop=741 --step=10 -t=50 --amp
+            ```
+            - `--amp --xla`
+            ```
+            python record_batchSize_trainTime.py -r=160 -d=imagenet -p=/data --start=10 --stop=2801 --step=10 -t=50 --amp --xla ;\
+            python record_batchSize_trainTime.py -r=224 -d=imagenet -p=/data --start=10 --stop=1401 --step=10 -t=50 --amp --xla ;\
+            python record_batchSize_trainTime.py -r=288 -d=imagenet -p=/data --start=10 --stop=901 --step=10 -t=50 --amp --xla
+            ```
+        - training
+            - `python test3090/main_3090.py -r= -w=5 -s= -a=140.109.23.231 -d=imagenet -p=/data -t=1.05 --amp`
+            - ~~`python test3090/main_3090.py -r= -w=5 -s= -a=140.109.23.231 -d=imagenet -p=/data -t=1.05 --amp --xla`~~
 - Comments
     - `python record_batchSize_trainTime.py -r=160 -d=imagenet -p=/ssd --start=5 --stop=6 --step=5 -t=50 --amp --xla`
     - very slow...
     - 2024-01-27 00:27:58.708671: E tensorflow/compiler/xla/service/slow_operation_alarm.cc:133] The operation took 54m38.019217519s
 
-## ~~Too Old (Depricated)~~
-### Environment
-- python 3.9
-- tensorflow 2.6.* (2.6.5)
-- torch 1.10.* (1.10.2)
-### Installation
-1. Create conda environment:
-    ```
-    conda create -n DBSDL python=3.9
-    ```
-2. Activate conda environment:
-    ```
-    conda activate DBSDL
-    ```
-3. Install pip packages:
-    - For just running programs:
-        ```
-        pip install -U tensorflow==2.6.* torch==1.10.*
-        ```
-    - For running programs, analyzing data, and others:
-        - for `jupyterlab`
-            ```
-            pip install -U tensorflow==2.6.* torch==1.10.* jupyterlab matplotlib scikit-learn imgaug torchvision
-            ```
-        - for `nbclassic`
-            ```
-            pip install -U tensorflow==2.6.* torch==1.10.* nbclassic matplotlib scikit-learn imgaug torchvision
-            ```
