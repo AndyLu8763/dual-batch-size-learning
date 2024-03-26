@@ -109,15 +109,21 @@ Build at 2024/01/07
 - Training
     - `python main.py -r= -w= -s= -a= -d= -p=/ssd -t=1.05 ${--amp --xla}`
     - ex.
-        - for server, `python main.py -r=0 -w=2 -s=0 -a=192.168.0.1 -d=cifar100 -p=/ssd -t=1.05`
-        - for worker, `python main.py -r=1 -w=2 -s=0 -a=192.168.0.1 -d=cifar100 -p=/ssd -t=1.05`
+        - for server, `python main.py -r=0 -w=2 -s=0 -a=$(IP_ADDRESS) -d=cifar100 -p=/ssd -t=1.05`
+        - for worker, `python main.py -r=1 -w=2 -s=0 -a=$(IP_ADDRESS) -d=cifar100 -p=/ssd -t=1.05`
+- GTX-1080 setting
+    - gpu05 as server, gpu01/02/03/04 as workers
+    - cifar100
+        - `python main.py -r= -w=5 -s= -a=140.109.23.106 -d=cifar100 -t=1.05`
+    - imagenet
+        - `python main.py -r= -w=5 -s= -a=140.109.23.106 -d=imagenet -p=/ssd -t=1.05 --amp --xla`
 - RTX-3090 imagenet setting
     - gpu10 as server, gpu06/07/08/14 as workers
     - ImageNet
         - test max BS
             - `vim ~/parameter_server_conf.py`
             - `cp ~/parameter_server_conf.py .`
-            - `python main_conf.py -r= -w=2 -s=0 -a=140.109.23.231 -d=imagenet -p=/data -t=1.05 --amp --xla`
+            - `python main_conf.py -r= -w=2 -s=0 -a=140.109.23.231 -d=imagenet -p=/data -t=1.05 --amp`
             - resolution_ls = [160, 224, 288]
             - batch_size_ls = [2330, 1110, 740], for `--amp`
             - batch_size_ls = [2800, 1400, 900], for `--amp --xla` ~~[660, 990, 560] with no diff ERROR but mem not full~~
