@@ -7,7 +7,8 @@ from tensorflow import keras
 # Maintain WEIGHT_DECAY of different TF versions through OLD_VERSION
 ## "True" for TF 2.6 and other older versions, "False" for newer versions
 ## Support weight_dacay via keras.model instead of keras.optimizers
-OLD_VERSION = False
+### the accuracy is so suck without kernel_regularizer, just use it
+OLD_VERSION = True
 weight_decay = 1e-4
 
 mean = [0.485, 0.456, 0.406]
