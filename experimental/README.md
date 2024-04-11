@@ -111,6 +111,17 @@ Build at 2024/01/07
     - ex.
         - for server, `python main.py -r=0 -w=2 -s=0 -a=$(IP_ADDRESS) -d=cifar100 -p=/ssd -t=1.05`
         - for worker, `python main.py -r=1 -w=2 -s=0 -a=$(IP_ADDRESS) -d=cifar100 -p=/ssd -t=1.05`
+- Experiments
+    - GTX-1080 for cifar100
+        - `python exp1080/main.py -r= -w=5 -s= -a=140.109.23.106 -d=cifar100 -t=1.05`
+        - file = `main.py` / `main_conf.py`
+        - t = `1.05` / `1.1`
+    - RTX-3090 for imagent with `--amp`
+        - `python exp3090/main_3090.py -r= -w=5 -s= -a=140.109.23.231 -d=imagenet -p=/data -t=1.05 --amp`
+        - file = `main_3090.py` / `main_conf_3090.py`
+        - t = `1.05` / `1.1`
+
+<!--
 - GTX-1080 setting
     - gpu05 as server, gpu01/02/03/04 as workers
     - cifar100
@@ -150,4 +161,4 @@ Build at 2024/01/07
     - `python record_batchSize_trainTime.py -r=160 -d=imagenet -p=/ssd --start=5 --stop=6 --step=5 -t=50 --amp --xla`
     - very slow...
     - 2024-01-27 00:27:58.708671: E tensorflow/compiler/xla/service/slow_operation_alarm.cc:133] The operation took 54m38.019217519s
-
+-->
