@@ -13,7 +13,7 @@ import parameter_server_3090_freq as ps
 ## testing 1: clear; python main.py -r= -w=2 -s=0 -a=140.112.31.196 -d=cifar100 -t=1.05 --amp --no-save
 ## testing 2: clear; python main.py -r= --device-index= -w=6 -s=0 -a=140.112.31.196 -d=cifar100 -t=1.05 --amp --no-save
 ## testing 3: clear; python main.py -r= --device-index= -w=6 -s=0 -a=140.112.31.196 -d=imagenet -p=/ssd -t=1.05 --amp --xla --no-save
-## run1: python main.py -r= -w=5 -s=0 -a=140.109.23.106 -d=cifar100 -t=1.05 -f=32
+## run1: python main.py -r= -w=5 -s=0 -a=140.109.23.106 -d=cifar100 -t=1.05
 ## run2: python main.py -r= -w=5 -s=0 -a=140.109.23.106 -d=imagenet -p=/ssd -t=1.05 -f=32 --amp --xla
 
 # parser
@@ -26,7 +26,7 @@ parser = argparse.ArgumentParser(
         'If the user wants to adjust low-level control options, modify the code. '
         'Required settings [--rank, --world-size, --num-small, --server-addr, --dataset, --dir-path, --time-ratio] '
         'or [-r, -w, -s, -a, -d, -p, -t], '
-        'optional settings [--amp, --xla, --depth, --server-port, --no-cycle, --temp, --no-save].'
+        'optional settings [--amp, --xla, --depth, --server-port, --no-cycle, --temp, --no-save, --sync-freq].'
     ),
     formatter_class=CustomFormatter,
 )
@@ -129,7 +129,8 @@ parser.add_argument(
     action='store_false',
     help='do not save the training results, including "_model" and ".npy"',
 )
-## synchronization frequency, modify in self.[mini_epochs, total_data_amount]
+## synchronization frequency,
+## modify in self.[mini_epochs, total_data_amount, iter_milestones, cycle_milestones]
 parser.add_argument(
     '--sync-freq', '--freq', '-f',
     dest='sync_freq',

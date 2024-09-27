@@ -73,11 +73,11 @@ class Server(object):
         self.iter_milestones = np.array(
             [80, 120, 140] if 'cifar' in args.dataset
             else [60, 90, 105]
-        ) * (args.world_size - 1)
+        ) * (args.world_size - 1) * args.sync_freq
         self.cycle_milestones = np.array(
             [40, 80, 100, 120, 130, 140] if 'cifar' in args.dataset
             else [20, 40, 60, 70, 80, 90, 95, 100, 105]
-        ) * (args.world_size - 1)
+        ) * (args.world_size - 1) * args.sync_freq
         ####'''
         ## modified by iter_milestones [30, 60, 90]
         ### (+1) for preventing iter overflow
@@ -137,13 +137,14 @@ class Server(object):
             'commit_time': [],  # count from program start
         }
         self.outfile = (
-            f'{args.dataset}_resnet{args.depth}_e{self.epochs}'
-            f'_t{("%.2f" % args.time_ratio).replace(".", "")}'
-            f'_w{args.world_size}s{args.small}'
-            f'{"_amp" if args.amp else ""}'
-            f'{"_xla" if args.xla else ""}'
-            f'{"" if args.cycle else "_noCycle"}'
-            f'{"_" + args.comments if args.comments else ""}'
+            f'{args.dataset}_resnet{args.depth}_e{self.epochs}' # dataset, model, epochs
+            f'_t{("%.2f" % args.time_ratio).replace(".", "")}'  # additional time ratio
+            f'_w{args.world_size}s{args.small}'                 # world size, num of small workers
+            f'_f{args.sync_freq}'                               # sync freq
+            f'{"_amp" if args.amp else ""}'                     # amp
+            f'{"_xla" if args.xla else ""}'                     # xla
+            f'{"" if args.cycle else "_noCycle"}'               # cyclic learning
+            f'{"_" + args.comments if args.comments else ""}'   # comments
         )
         self.tempfile = f'temp_{self.outfile}'
     
