@@ -14,7 +14,7 @@ import parameter_server_3090_freq as ps
 ## testing 2: clear; python main.py -r= --device-index= -w=6 -s=0 -a=140.112.31.196 -d=cifar100 -t=1.05 --amp --no-save
 ## testing 3: clear; python main.py -r= --device-index= -w=6 -s=0 -a=140.112.31.196 -d=imagenet -p=/ssd -t=1.05 --amp --xla --no-save
 ## run1: python main.py -r= -w=5 -s=0 -a=140.109.23.106 -d=cifar100 -t=1.05
-## run2: python main.py -r= -w=5 -s=0 -a=140.109.23.106 -d=imagenet -p=/ssd -t=1.05 -f=32 --amp --xla
+## run2: python main.py -r= -w=5 -s=0 -a=140.109.23.106 -d=imagenet -p=/ssd -t=1.05 -f=32 --amp
 
 # parser
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.MetavarTypeHelpFormatter):
