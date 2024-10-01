@@ -1,5 +1,6 @@
 import itertools
 import os
+import random
 import shutil
 import threading
 import time
@@ -107,6 +108,7 @@ class Server(object):
             # fixed values
             'momentum': 0.9,
             'weight_decay': 1e-4,
+            'total_data_amount': self.total_data_amount,
             'large_data_amount': self.large_data_amount,
             'small_data_amount': self.small_data_amount,
         }
@@ -327,11 +329,30 @@ class Worker(object):
                 f'BS {self.parameter["small_batch_size"] if self.is_small_batch else self.parameter["large_batch_size"]}'
             )
             # train
+            num_take_batch = round(
+                self.parameter['small_data_amount'] / self.parameter['small_batch_size'] if self.is_small_batch
+                else self.parameter['large_data_amount'] / self.parameter['large_batch_size']
+            )
+            num_total_batch = ((self.parameter['total_data_amount'] * self.args.sync_freq) //
+                               (self.parameter['small_batch_size'] if self.is_small_batch
+                               else self.parameter['large_batch_size']))
+            ## resolve the shuffle buffer issue for imagent dataset, default buffer_size = batch_size * 8
+            ### plan A: let it go
+            num_skip_batch = 0
+            #'''
+            ### plan B: bin iteration, reasonable, since each worker's data is close at the same epoch
+            #num_batch_bin = (num_total_batch // num_take_batch) - 1 # -1: ensure at least 1 bin can be taken
+            #num_skip_batch = num_take_batch * (self.local_commit_ID % num_batch_bin)
+            #'''
+            #'''
+            ### plan C: random skip, each worker's data might be different at the same epoch
+            #num_skip_batch = random.randint(0, num_total_batch - num_take_batch)
+            #'''
             train_logs = self.model.fit(
-                self.dataloader['train'].take(round(
-                    self.parameter['small_data_amount'] / self.parameter['small_batch_size'] if self.is_small_batch
-                    else self.parameter['large_data_amount'] / self.parameter['large_batch_size']
-                )),
+                (self.dataloader['train']
+                 .skip(0 if 'cifar' in self.args.dataset else num_skip_batch)
+                 .take(num_take_batch)
+                ),
                 verbose=self.verbose,
                 callbacks=[self.time_callback],
             )

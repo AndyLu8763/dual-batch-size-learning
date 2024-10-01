@@ -47,7 +47,7 @@ def load_cifar(resolution: int, batch_size: int, dataset: str, val_batch_size: i
                 num_parallel_calls=tf.data.AUTOTUNE
             )
             .cache()
-            .shuffle(buffer_size=len(y_train))
+            .shuffle(buffer_size=50000)
             .batch(batch_size=batch_size)
             .prefetch(buffer_size=tf.data.AUTOTUNE)
         ),
