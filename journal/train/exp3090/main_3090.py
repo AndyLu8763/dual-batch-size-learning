@@ -1,3 +1,5 @@
+# command: python main.py -r= -w=5 -s= -a=140.109.23.106 -d=imagenet -p=/data -t=1.05 --amp
+
 import argparse
 import os
 
@@ -7,14 +9,6 @@ import torch
 from torch.distributed import rpc
 
 import parameter_server_3090 as ps
-
-
-# command
-## testing 1: clear; python main.py -r= -w=2 -s=0 -a=140.112.31.196 -d=cifar100 -t=1.05 --amp --no-save
-## testing 2: clear; python main.py -r= --device-index= -w=6 -s=0 -a=140.112.31.196 -d=cifar100 -t=1.05 --amp --no-save
-## testing 3: clear; python main.py -r= --device-index= -w=6 -s=0 -a=140.112.31.196 -d=imagenet -p=/ssd -t=1.05 --amp --xla --no-save
-## run1: python main.py -r= -w=5 -s=0 -a=140.109.23.106 -d=cifar100 -t=1.05
-## run2: python main.py -r= -w=5 -s=0 -a=140.109.23.106 -d=imagenet -p=/ssd -t=1.05 --amp --xla
 
 # parser
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.MetavarTypeHelpFormatter):

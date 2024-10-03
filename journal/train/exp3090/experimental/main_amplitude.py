@@ -1,4 +1,4 @@
-# command: python main.py -r= -w=5 -s= -a=140.109.23.106 -d=imagenet -p=/data -t=1.05 --amp
+# command: python main.py -r= -w=5 -s= -a=140.109.23.107 -d=imagenet -p=/data -t=1.05 --amp
 
 import argparse
 import os
@@ -8,7 +8,7 @@ from tensorflow import keras
 import torch
 from torch.distributed import rpc
 
-import parameter_server_conf_3090 as ps
+import ps_amplitude as ps
 
 # parser
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.MetavarTypeHelpFormatter):
