@@ -1,4 +1,4 @@
-# modify: [self.epochs, self.small_size_ls] for testing
+# modify: [self.epochs, self.small_batch_size_ls] for testing
 
 import itertools
 import os
@@ -61,7 +61,8 @@ class Server(object):
         else:
             raise ValueError(f'Invalid dataset "{args.dataset}".')
         self.large_data_amount, self.small_data_amount, self.small_batch_size_ls = self.get_large_small_dataAmount_batchSize()
-        self.small_batch_size_ls = [round(i * ((args.world_size - 1) / args.small)) for i in self.small_batch_size_ls]  # testing
+        if args.small != 0:
+            self.small_batch_size_ls = [round(i * ((args.world_size - 1) / args.small)) for i in self.small_batch_size_ls]  # testing
         # iter and cycles milestones
         ## milestones
         '''
